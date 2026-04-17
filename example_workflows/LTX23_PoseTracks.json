@@ -2,7 +2,7 @@
   "id": "68ab47e1-93a0-441b-8951-be3ec84ba3cb",
   "revision": 0,
   "last_node_id": 1586,
-  "last_link_id": 3233,
+  "last_link_id": 3236,
   "nodes": [
     {
       "id": 1326,
@@ -18,7 +18,7 @@
       "flags": {
         "collapsed": true
       },
-      "order": 17,
+      "order": 24,
       "mode": 0,
       "inputs": [
         {
@@ -217,7 +217,7 @@
       "type": "RandomNoise",
       "pos": [
         -1110,
-        5860
+        5880
       ],
       "size": [
         210,
@@ -226,7 +226,7 @@
       "flags": {
         "collapsed": true
       },
-      "order": 20,
+      "order": 17,
       "mode": 0,
       "inputs": [
         {
@@ -258,7 +258,7 @@
         }
       },
       "widgets_values": [
-        772344048337147,
+        766372064774168,
         "randomize"
       ],
       "color": "#232",
@@ -269,7 +269,7 @@
       "type": "PrimitiveStringMultiline",
       "pos": [
         -1330,
-        5620
+        5640
       ],
       "size": [
         400,
@@ -317,7 +317,7 @@
         180
       ],
       "flags": {},
-      "order": 21,
+      "order": 18,
       "mode": 0,
       "inputs": [
         {
@@ -562,7 +562,7 @@
         110
       ],
       "flags": {},
-      "order": 41,
+      "order": 37,
       "mode": 0,
       "inputs": [
         {
@@ -775,7 +775,7 @@
         180
       ],
       "flags": {},
-      "order": 26,
+      "order": 25,
       "mode": 0,
       "inputs": [
         {
@@ -826,7 +826,7 @@
         90
       ],
       "flags": {},
-      "order": 34,
+      "order": 32,
       "mode": 0,
       "inputs": [
         {
@@ -887,7 +887,7 @@
         110
       ],
       "flags": {},
-      "order": 38,
+      "order": 35,
       "mode": 0,
       "inputs": [
         {
@@ -988,7 +988,7 @@
       "flags": {
         "collapsed": false
       },
-      "order": 31,
+      "order": 26,
       "mode": 0,
       "inputs": [
         {
@@ -1063,7 +1063,7 @@
         130
       ],
       "flags": {},
-      "order": 37,
+      "order": 33,
       "mode": 0,
       "inputs": [
         {
@@ -1120,7 +1120,7 @@
         290
       ],
       "flags": {},
-      "order": 45,
+      "order": 49,
       "mode": 0,
       "inputs": [
         {
@@ -1254,47 +1254,6 @@
       "bgcolor": "#653"
     },
     {
-      "id": 1379,
-      "type": "PrimitiveStringMultiline",
-      "pos": [
-        -1330,
-        5370
-      ],
-      "size": [
-        400,
-        200
-      ],
-      "flags": {},
-      "order": 6,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "STRING",
-          "type": "STRING",
-          "links": [
-            2757
-          ]
-        }
-      ],
-      "title": "FADE: POSITIVE PROMPT",
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.15.1",
-        "Node name for S&R": "PrimitiveStringMultiline",
-        "ue_properties": {
-          "widget_ue_connectable": {},
-          "input_ue_unconnectable": {},
-          "version": "7.7"
-        }
-      },
-      "widgets_values": [
-        "the camera rotates around the woman while the woman sings a song, clearly articulating her mouth and jaw"
-      ],
-      "color": "#232",
-      "bgcolor": "#353"
-    },
-    {
       "id": 1382,
       "type": "CreateVideo",
       "pos": [
@@ -1409,7 +1368,7 @@
         50
       ],
       "flags": {},
-      "order": 23,
+      "order": 19,
       "mode": 0,
       "inputs": [
         {
@@ -1459,7 +1418,7 @@
         110
       ],
       "flags": {},
-      "order": 19,
+      "order": 23,
       "mode": 0,
       "inputs": [
         {
@@ -1567,7 +1526,7 @@
         570
       ],
       "flags": {},
-      "order": 18,
+      "order": 22,
       "mode": 0,
       "inputs": [
         {
@@ -1643,78 +1602,6 @@
       "bgcolor": "#353"
     },
     {
-      "id": 1449,
-      "type": "LTXDimensionCalculator",
-      "pos": [
-        -1320,
-        4280
-      ],
-      "size": [
-        270,
-        190
-      ],
-      "flags": {},
-      "order": 7,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "width",
-          "type": "INT",
-          "links": [
-            2938,
-            2951,
-            3008,
-            3191,
-            3193
-          ]
-        },
-        {
-          "name": "height",
-          "type": "INT",
-          "links": [
-            2939,
-            2952,
-            3009,
-            3192,
-            3194
-          ]
-        },
-        {
-          "name": "width_half",
-          "type": "INT",
-          "links": []
-        },
-        {
-          "name": "height_half",
-          "type": "INT",
-          "links": []
-        },
-        {
-          "name": "label",
-          "type": "STRING",
-          "links": null
-        }
-      ],
-      "properties": {
-        "aux_id": "ckinpdx/ComfyUI-LTXDimensionCalculator",
-        "ver": "6f5f6a6fd033bda8e3c7e94c5dbf0a56973539c1",
-        "Node name for S&R": "LTXDimensionCalculator",
-        "ue_properties": {
-          "widget_ue_connectable": {},
-          "input_ue_unconnectable": {},
-          "version": "7.7"
-        }
-      },
-      "widgets_values": [
-        "9:16 — TikTok, Reels, Shorts",
-        "Portrait",
-        "704x1280"
-      ],
-      "color": "#232",
-      "bgcolor": "#353"
-    },
-    {
       "id": 1450,
       "type": "LTXFrameCalculator",
       "pos": [
@@ -1726,7 +1613,7 @@
         130
       ],
       "flags": {},
-      "order": 24,
+      "order": 20,
       "mode": 0,
       "inputs": [
         {
@@ -1788,7 +1675,7 @@
         90
       ],
       "flags": {},
-      "order": 8,
+      "order": 6,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -1818,136 +1705,6 @@
       "bgcolor": "#653"
     },
     {
-      "id": 1564,
-      "type": "PTBeatDetector",
-      "pos": [
-        -640,
-        6800
-      ],
-      "size": [
-        270,
-        90
-      ],
-      "flags": {},
-      "order": 32,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "audio",
-          "type": "AUDIO",
-          "link": 3199
-        },
-        {
-          "name": "frame_count",
-          "type": "INT",
-          "widget": {
-            "name": "frame_count"
-          },
-          "link": 3201
-        },
-        {
-          "name": "fps",
-          "type": "INT",
-          "widget": {
-            "name": "fps"
-          },
-          "link": 3197
-        }
-      ],
-      "outputs": [
-        {
-          "name": "beat_info",
-          "type": "PT_BEAT_INFO",
-          "links": [
-            3203
-          ]
-        }
-      ],
-      "properties": {
-        "aux_id": "ckinpdx/ComfyUI-PoseTracks",
-        "ver": "0950c4c3fcec8991d4273994314164ba627902be",
-        "Node name for S&R": "PTBeatDetector",
-        "ue_properties": {
-          "widget_ue_connectable": {},
-          "input_ue_unconnectable": {},
-          "version": "7.7"
-        }
-      },
-      "widgets_values": [
-        81,
-        24
-      ],
-      "color": "#432",
-      "bgcolor": "#653"
-    },
-    {
-      "id": 1565,
-      "type": "PTAudioFeatureExtractor",
-      "pos": [
-        -640,
-        6930
-      ],
-      "size": [
-        270,
-        180
-      ],
-      "flags": {},
-      "order": 33,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "audio",
-          "type": "AUDIO",
-          "link": 3200
-        },
-        {
-          "name": "frame_count",
-          "type": "INT",
-          "widget": {
-            "name": "frame_count"
-          },
-          "link": 3202
-        },
-        {
-          "name": "fps",
-          "type": "INT",
-          "widget": {
-            "name": "fps"
-          },
-          "link": 3198
-        }
-      ],
-      "outputs": [
-        {
-          "name": "audio_features",
-          "type": "PT_AUDIO_FEATURES",
-          "links": [
-            3204
-          ]
-        }
-      ],
-      "properties": {
-        "aux_id": "ckinpdx/ComfyUI-PoseTracks",
-        "ver": "0950c4c3fcec8991d4273994314164ba627902be",
-        "Node name for S&R": "PTAudioFeatureExtractor",
-        "ue_properties": {
-          "widget_ue_connectable": {},
-          "input_ue_unconnectable": {},
-          "version": "7.7"
-        }
-      },
-      "widgets_values": [
-        81,
-        24,
-        "20-250",
-        "250-2000",
-        "2000-8000",
-        0.3
-      ],
-      "color": "#432",
-      "bgcolor": "#653"
-    },
-    {
       "id": 1567,
       "type": "PTPoseRenderer",
       "pos": [
@@ -1959,7 +1716,7 @@
         160
       ],
       "flags": {},
-      "order": 40,
+      "order": 47,
       "mode": 0,
       "inputs": [
         {
@@ -2026,7 +1783,7 @@
         729.8181818181818
       ],
       "flags": {},
-      "order": 44,
+      "order": 48,
       "mode": 0,
       "inputs": [
         {
@@ -2085,62 +1842,16 @@
           "hidden": false,
           "paused": false,
           "params": {
-            "filename": "WanVideo_SCAIL_00002.mp4",
+            "filename": "WanVideo_SCAIL_00003-audio.mp4",
             "subfolder": "",
             "type": "temp",
             "format": "video/h264-mp4",
             "frame_rate": 25,
-            "workflow": "WanVideo_SCAIL_00002.png",
-            "fullpath": "C:\\ComfyUI\\temp\\WanVideo_SCAIL_00002.mp4"
+            "workflow": "WanVideo_SCAIL_00003.png",
+            "fullpath": "C:\\ComfyUI\\temp\\WanVideo_SCAIL_00003-audio.mp4"
           }
         }
       },
-      "color": "#432",
-      "bgcolor": "#653"
-    },
-    {
-      "id": 1552,
-      "type": "ConvertOpenPoseKeypointsToDWPose",
-      "pos": [
-        -990,
-        6750
-      ],
-      "size": [
-        330,
-        60
-      ],
-      "flags": {},
-      "order": 35,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "keypoints",
-          "type": "POSE_KEYPOINT",
-          "link": 3155
-        }
-      ],
-      "outputs": [
-        {
-          "name": "dw_poses",
-          "type": "DWPOSES",
-          "links": [
-            3207
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "ComfyUI-SCAIL-Pose",
-        "ver": "82380a5409248d5c2642bf3a3559f8e9dedacdd8",
-        "Node name for S&R": "ConvertOpenPoseKeypointsToDWPose",
-        "ue_properties": {
-          "widget_ue_connectable": {},
-          "input_ue_unconnectable": {},
-          "version": "7.5.1"
-        }
-      },
-      "widgets_values": [
-        3
-      ],
       "color": "#432",
       "bgcolor": "#653"
     },
@@ -2156,7 +1867,7 @@
         480
       ],
       "flags": {},
-      "order": 42,
+      "order": 38,
       "mode": 0,
       "inputs": [
         {
@@ -2223,7 +1934,7 @@
         16,
         2,
         1,
-        1182790702,
+        3945874401,
         "randomize"
       ],
       "color": "#432",
@@ -2234,14 +1945,14 @@
       "type": "PrimitiveInt",
       "pos": [
         -1330,
-        5860
+        5880
       ],
       "size": [
         210,
         90
       ],
       "flags": {},
-      "order": 9,
+      "order": 7,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -2286,7 +1997,7 @@
         90
       ],
       "flags": {},
-      "order": 10,
+      "order": 8,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -2327,7 +2038,7 @@
         220
       ],
       "flags": {},
-      "order": 22,
+      "order": 40,
       "mode": 0,
       "inputs": [
         {
@@ -2338,19 +2049,19 @@
         {
           "name": "audio_features",
           "type": "PT_AUDIO_FEATURES",
-          "link": null
+          "link": 3234
         },
         {
           "name": "reference_pose",
           "shape": 7,
           "type": "PT_POSE",
-          "link": null
+          "link": 3235
         },
         {
           "name": "beat_info",
           "shape": 7,
           "type": "PT_BEAT_INFO",
-          "link": null
+          "link": 3236
         },
         {
           "name": "seed",
@@ -2384,7 +2095,7 @@
         "break",
         12,
         0,
-        666857835,
+        299254966,
         "randomize"
       ],
       "color": "#432",
@@ -2402,7 +2113,7 @@
         26
       ],
       "flags": {},
-      "order": 36,
+      "order": 46,
       "mode": 0,
       "inputs": [
         {
@@ -2444,7 +2155,7 @@
         26
       ],
       "flags": {},
-      "order": 46,
+      "order": 41,
       "mode": 0,
       "inputs": [
         {
@@ -2477,14 +2188,14 @@
       "type": "VHS_LoadAudioUpload",
       "pos": [
         -1330,
-        6000
+        6020
       ],
       "size": [
         370,
         210
       ],
       "flags": {},
-      "order": 11,
+      "order": 9,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -2543,7 +2254,7 @@
         230
       ],
       "flags": {},
-      "order": 28,
+      "order": 29,
       "mode": 0,
       "inputs": [
         {
@@ -2589,79 +2300,6 @@
       "bgcolor": "#653"
     },
     {
-      "id": 1561,
-      "type": "PTPoseFromDWPose",
-      "pos": [
-        -640,
-        6480
-      ],
-      "size": [
-        270,
-        150
-      ],
-      "flags": {},
-      "order": 39,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "dw_poses",
-          "shape": 7,
-          "type": "DWPOSES",
-          "link": 3207
-        },
-        {
-          "name": "pose_keypoint",
-          "shape": 7,
-          "type": "POSE_KEYPOINT",
-          "link": null
-        },
-        {
-          "name": "image_width",
-          "type": "INT",
-          "widget": {
-            "name": "image_width"
-          },
-          "link": 3191
-        },
-        {
-          "name": "image_height",
-          "type": "INT",
-          "widget": {
-            "name": "image_height"
-          },
-          "link": 3192
-        }
-      ],
-      "outputs": [
-        {
-          "name": "PT_POSE",
-          "type": "PT_POSE",
-          "links": [
-            3205,
-            3227
-          ]
-        }
-      ],
-      "properties": {
-        "aux_id": "ckinpdx/ComfyUI-PoseTracks",
-        "ver": "0950c4c3fcec8991d4273994314164ba627902be",
-        "Node name for S&R": "PTPoseFromDWPose",
-        "ue_properties": {
-          "widget_ue_connectable": {},
-          "input_ue_unconnectable": {},
-          "version": "7.7"
-        }
-      },
-      "widgets_values": [
-        512,
-        768,
-        800,
-        55
-      ],
-      "color": "#432",
-      "bgcolor": "#653"
-    },
-    {
       "id": 1580,
       "type": "PTMixamoFBX",
       "pos": [
@@ -2673,7 +2311,7 @@
         170
       ],
       "flags": {},
-      "order": 43,
+      "order": 39,
       "mode": 0,
       "inputs": [
         {
@@ -2747,7 +2385,7 @@
         60
       ],
       "flags": {},
-      "order": 12,
+      "order": 10,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -2791,7 +2429,7 @@
         50
       ],
       "flags": {},
-      "order": 25,
+      "order": 21,
       "mode": 0,
       "inputs": [
         {
@@ -2844,7 +2482,7 @@
         26
       ],
       "flags": {},
-      "order": 51,
+      "order": 45,
       "mode": 0,
       "inputs": [
         {
@@ -2862,7 +2500,12 @@
       ],
       "properties": {
         "showOutputText": false,
-        "horizontal": false
+        "horizontal": false,
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "7.7",
+          "input_ue_unconnectable": {}
+        }
       },
       "color": "#2a363b",
       "bgcolor": "#3f5159"
@@ -2879,7 +2522,7 @@
         170
       ],
       "flags": {},
-      "order": 47,
+      "order": 42,
       "mode": 0,
       "inputs": [
         {
@@ -2955,11 +2598,17 @@
         90
       ],
       "flags": {},
-      "order": 13,
+      "order": 11,
       "mode": 0,
       "inputs": [],
       "outputs": [],
-      "properties": {},
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "7.7",
+          "input_ue_unconnectable": {}
+        }
+      },
       "widgets_values": [
         "connect to pt pose render"
       ],
@@ -2978,7 +2627,7 @@
         26
       ],
       "flags": {},
-      "order": 50,
+      "order": 44,
       "mode": 0,
       "inputs": [
         {
@@ -2996,7 +2645,12 @@
       ],
       "properties": {
         "showOutputText": false,
-        "horizontal": false
+        "horizontal": false,
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "7.7",
+          "input_ue_unconnectable": {}
+        }
       },
       "color": "#2a363b",
       "bgcolor": "#3f5159"
@@ -3013,7 +2667,7 @@
         100
       ],
       "flags": {},
-      "order": 48,
+      "order": 50,
       "mode": 0,
       "inputs": [
         {
@@ -3071,7 +2725,7 @@
       "flags": {
         "collapsed": false
       },
-      "order": 27,
+      "order": 31,
       "mode": 0,
       "inputs": [
         {
@@ -3149,7 +2803,7 @@
       "flags": {
         "collapsed": false
       },
-      "order": 49,
+      "order": 51,
       "mode": 0,
       "inputs": [
         {
@@ -3205,11 +2859,17 @@
         90
       ],
       "flags": {},
-      "order": 14,
+      "order": 12,
       "mode": 0,
       "inputs": [],
       "outputs": [],
-      "properties": {},
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "7.7",
+          "input_ue_unconnectable": {}
+        }
+      },
       "widgets_values": [
         "connect to frame count on ltx empty video"
       ],
@@ -3228,7 +2888,7 @@
         26
       ],
       "flags": {},
-      "order": 29,
+      "order": 43,
       "mode": 0,
       "inputs": [
         {
@@ -3257,6 +2917,371 @@
       },
       "color": "#2a363b",
       "bgcolor": "#3f5159"
+    },
+    {
+      "id": 1449,
+      "type": "LTXDimensionCalculator",
+      "pos": [
+        -1330,
+        4280
+      ],
+      "size": [
+        270,
+        190
+      ],
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "width",
+          "type": "INT",
+          "links": [
+            2938,
+            2951,
+            3008,
+            3191,
+            3193
+          ]
+        },
+        {
+          "name": "height",
+          "type": "INT",
+          "links": [
+            2939,
+            2952,
+            3009,
+            3192,
+            3194
+          ]
+        },
+        {
+          "name": "width_half",
+          "type": "INT",
+          "links": []
+        },
+        {
+          "name": "height_half",
+          "type": "INT",
+          "links": []
+        },
+        {
+          "name": "label",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "aux_id": "ckinpdx/ComfyUI-LTXDimensionCalculator",
+        "ver": "6f5f6a6fd033bda8e3c7e94c5dbf0a56973539c1",
+        "Node name for S&R": "LTXDimensionCalculator",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.7"
+        }
+      },
+      "widgets_values": [
+        "9:16 — TikTok, Reels, Shorts",
+        "Portrait",
+        "704x1280"
+      ],
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 1565,
+      "type": "PTAudioFeatureExtractor",
+      "pos": [
+        -640,
+        6930
+      ],
+      "size": [
+        270,
+        180
+      ],
+      "flags": {},
+      "order": 28,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "link": 3200
+        },
+        {
+          "name": "frame_count",
+          "type": "INT",
+          "widget": {
+            "name": "frame_count"
+          },
+          "link": 3202
+        },
+        {
+          "name": "fps",
+          "type": "INT",
+          "widget": {
+            "name": "fps"
+          },
+          "link": 3198
+        }
+      ],
+      "outputs": [
+        {
+          "name": "audio_features",
+          "type": "PT_AUDIO_FEATURES",
+          "links": [
+            3204,
+            3234
+          ]
+        }
+      ],
+      "properties": {
+        "aux_id": "ckinpdx/ComfyUI-PoseTracks",
+        "ver": "0950c4c3fcec8991d4273994314164ba627902be",
+        "Node name for S&R": "PTAudioFeatureExtractor",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.7"
+        }
+      },
+      "widgets_values": [
+        81,
+        24,
+        "20-250",
+        "250-2000",
+        "2000-8000",
+        0.3
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 1552,
+      "type": "ConvertOpenPoseKeypointsToDWPose",
+      "pos": [
+        -990,
+        6750
+      ],
+      "size": [
+        330,
+        60
+      ],
+      "flags": {},
+      "order": 34,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "keypoints",
+          "type": "POSE_KEYPOINT",
+          "link": 3155
+        }
+      ],
+      "outputs": [
+        {
+          "name": "dw_poses",
+          "type": "DWPOSES",
+          "links": [
+            3207
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "ComfyUI-SCAIL-Pose",
+        "ver": "82380a5409248d5c2642bf3a3559f8e9dedacdd8",
+        "Node name for S&R": "ConvertOpenPoseKeypointsToDWPose",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.5.1"
+        }
+      },
+      "widgets_values": [
+        3
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 1561,
+      "type": "PTPoseFromDWPose",
+      "pos": [
+        -640,
+        6480
+      ],
+      "size": [
+        270,
+        150
+      ],
+      "flags": {},
+      "order": 36,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "dw_poses",
+          "shape": 7,
+          "type": "DWPOSES",
+          "link": 3207
+        },
+        {
+          "name": "pose_keypoint",
+          "shape": 7,
+          "type": "POSE_KEYPOINT",
+          "link": null
+        },
+        {
+          "name": "image_width",
+          "type": "INT",
+          "widget": {
+            "name": "image_width"
+          },
+          "link": 3191
+        },
+        {
+          "name": "image_height",
+          "type": "INT",
+          "widget": {
+            "name": "image_height"
+          },
+          "link": 3192
+        }
+      ],
+      "outputs": [
+        {
+          "name": "PT_POSE",
+          "type": "PT_POSE",
+          "links": [
+            3205,
+            3227,
+            3235
+          ]
+        }
+      ],
+      "properties": {
+        "aux_id": "ckinpdx/ComfyUI-PoseTracks",
+        "ver": "0950c4c3fcec8991d4273994314164ba627902be",
+        "Node name for S&R": "PTPoseFromDWPose",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.7"
+        }
+      },
+      "widgets_values": [
+        512,
+        768,
+        800,
+        55
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 1564,
+      "type": "PTBeatDetector",
+      "pos": [
+        -640,
+        6800
+      ],
+      "size": [
+        270,
+        90
+      ],
+      "flags": {},
+      "order": 27,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "link": 3199
+        },
+        {
+          "name": "frame_count",
+          "type": "INT",
+          "widget": {
+            "name": "frame_count"
+          },
+          "link": 3201
+        },
+        {
+          "name": "fps",
+          "type": "INT",
+          "widget": {
+            "name": "fps"
+          },
+          "link": 3197
+        }
+      ],
+      "outputs": [
+        {
+          "name": "beat_info",
+          "type": "PT_BEAT_INFO",
+          "links": [
+            3203,
+            3236
+          ]
+        }
+      ],
+      "properties": {
+        "aux_id": "ckinpdx/ComfyUI-PoseTracks",
+        "ver": "0950c4c3fcec8991d4273994314164ba627902be",
+        "Node name for S&R": "PTBeatDetector",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.7"
+        }
+      },
+      "widgets_values": [
+        81,
+        24
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 1379,
+      "type": "PrimitiveStringMultiline",
+      "pos": [
+        -1330,
+        5390
+      ],
+      "size": [
+        400,
+        200
+      ],
+      "flags": {},
+      "order": 14,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            2757
+          ]
+        }
+      ],
+      "title": "FADE: POSITIVE PROMPT",
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.15.1",
+        "Node name for S&R": "PrimitiveStringMultiline",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.7"
+        }
+      },
+      "widgets_values": [
+        "the woman sings and dances, clearly articulating her mouth and jaw to the words"
+      ],
+      "color": "#232",
+      "bgcolor": "#353"
     }
   ],
   "links": [
@@ -3963,6 +3988,30 @@
       1575,
       0,
       "PT_POSE_SEQUENCE"
+    ],
+    [
+      3234,
+      1565,
+      0,
+      1577,
+      1,
+      "PT_AUDIO_FEATURES"
+    ],
+    [
+      3235,
+      1561,
+      0,
+      1577,
+      2,
+      "PT_POSE"
+    ],
+    [
+      3236,
+      1564,
+      0,
+      1577,
+      3,
+      "PT_BEAT_INFO"
     ]
   ],
   "groups": [],
@@ -4369,10 +4418,10 @@
     "ue_links": [],
     "links_added_by_ue": [],
     "ds": {
-      "scale": 0.16105100000002723,
+      "scale": 0.16105100000002753,
       "offset": [
-        4184.747211859734,
-        -3768.415901477194
+        4357.593321622302,
+        -3628.801671753296
       ]
     }
   },
