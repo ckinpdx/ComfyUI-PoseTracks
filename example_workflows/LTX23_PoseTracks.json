@@ -1,8 +1,8 @@
 {
   "id": "68ab47e1-93a0-441b-8951-be3ec84ba3cb",
   "revision": 0,
-  "last_node_id": 1574,
-  "last_link_id": 3214,
+  "last_node_id": 1577,
+  "last_link_id": 3224,
   "nodes": [
     {
       "id": 1326,
@@ -226,7 +226,7 @@
       "flags": {
         "collapsed": true
       },
-      "order": 19,
+      "order": 21,
       "mode": 0,
       "inputs": [
         {
@@ -258,7 +258,7 @@
         }
       },
       "widgets_values": [
-        425179947376481,
+        840124819380987,
         "randomize"
       ],
       "color": "#232",
@@ -317,7 +317,7 @@
         180
       ],
       "flags": {},
-      "order": 20,
+      "order": 22,
       "mode": 0,
       "inputs": [
         {
@@ -1820,7 +1820,7 @@
         }
       },
       "widgets_values": [
-        "2025-12-16-095546__0.png",
+        "ComfyUI_temp_gvjag_00026_.png",
         true,
         512,
         512,
@@ -2018,6 +2018,8 @@
         }
       ],
       "properties": {
+        "aux_id": "ckinpdx/ComfyUI-PoseTracks",
+        "ver": "0950c4c3fcec8991d4273994314164ba627902be",
         "Node name for S&R": "PTPoseFromDWPose",
         "ue_properties": {
           "widget_ue_connectable": {},
@@ -2046,7 +2048,7 @@
         130
       ],
       "flags": {},
-      "order": 21,
+      "order": 19,
       "mode": 0,
       "inputs": [
         {
@@ -2121,6 +2123,8 @@
         }
       ],
       "properties": {
+        "aux_id": "ckinpdx/ComfyUI-PoseTracks",
+        "ver": "0950c4c3fcec8991d4273994314164ba627902be",
         "Node name for S&R": "PTAISTLibraryLoader",
         "ue_properties": {
           "widget_ue_connectable": {},
@@ -2182,6 +2186,8 @@
         }
       ],
       "properties": {
+        "aux_id": "ckinpdx/ComfyUI-PoseTracks",
+        "ver": "0950c4c3fcec8991d4273994314164ba627902be",
         "Node name for S&R": "PTBeatDetector",
         "ue_properties": {
           "widget_ue_connectable": {},
@@ -2243,6 +2249,8 @@
         }
       ],
       "properties": {
+        "aux_id": "ckinpdx/ComfyUI-PoseTracks",
+        "ver": "0950c4c3fcec8991d4273994314164ba627902be",
         "Node name for S&R": "PTAudioFeatureExtractor",
         "ue_properties": {
           "widget_ue_connectable": {},
@@ -2279,7 +2287,7 @@
         {
           "name": "pose_sequence",
           "type": "PT_POSE_SEQUENCE",
-          "link": 3213
+          "link": 3223
         },
         {
           "name": "width",
@@ -2309,6 +2317,8 @@
         }
       ],
       "properties": {
+        "aux_id": "ckinpdx/ComfyUI-PoseTracks",
+        "ver": "0950c4c3fcec8991d4273994314164ba627902be",
         "Node name for S&R": "PTPoseRenderer",
         "ue_properties": {
           "widget_ue_connectable": {},
@@ -2397,13 +2407,13 @@
           "hidden": false,
           "paused": false,
           "params": {
-            "filename": "WanVideo_SCAIL_00005.mp4",
+            "filename": "WanVideo_SCAIL_00001.mp4",
             "subfolder": "",
             "type": "temp",
             "format": "video/h264-mp4",
             "frame_rate": 25,
-            "workflow": "WanVideo_SCAIL_00005.png",
-            "fullpath": "C:\\ComfyUI\\temp\\WanVideo_SCAIL_00005.mp4"
+            "workflow": "WanVideo_SCAIL_00001.png",
+            "fullpath": "C:\\ComfyUI\\temp\\WanVideo_SCAIL_00001.mp4"
           }
         }
       },
@@ -2422,7 +2432,7 @@
         50
       ],
       "flags": {},
-      "order": 22,
+      "order": 20,
       "mode": 0,
       "inputs": [
         {
@@ -2565,50 +2575,6 @@
       "bgcolor": "#653"
     },
     {
-      "id": 1412,
-      "type": "PrimitiveInt",
-      "pos": [
-        -1330,
-        5860
-      ],
-      "size": [
-        210,
-        90
-      ],
-      "flags": {},
-      "order": 10,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "INT",
-          "type": "INT",
-          "links": [
-            2820,
-            2833,
-            3209
-          ]
-        }
-      ],
-      "title": "FADE: Seed",
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.16.2",
-        "Node name for S&R": "PrimitiveInt",
-        "ue_properties": {
-          "widget_ue_connectable": {},
-          "input_ue_unconnectable": {},
-          "version": "7.7"
-        }
-      },
-      "widgets_values": [
-        25,
-        "fixed"
-      ],
-      "color": "#232",
-      "bgcolor": "#353"
-    },
-    {
       "id": 1452,
       "type": "PrimitiveFloat",
       "pos": [
@@ -2620,7 +2586,7 @@
         60
       ],
       "flags": {},
-      "order": 11,
+      "order": 10,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -2651,238 +2617,6 @@
       ],
       "color": "#232",
       "bgcolor": "#353"
-    },
-    {
-      "id": 1571,
-      "type": "Reroute",
-      "pos": [
-        -870,
-        7060
-      ],
-      "size": [
-        75,
-        26
-      ],
-      "flags": {},
-      "order": 39,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "",
-          "type": "*",
-          "link": 3214
-        }
-      ],
-      "outputs": [
-        {
-          "name": "",
-          "type": "PT_POSE_SEQUENCE",
-          "links": [
-            3212
-          ]
-        }
-      ],
-      "properties": {
-        "showOutputText": false,
-        "horizontal": false,
-        "ue_properties": {
-          "widget_ue_connectable": {},
-          "version": "7.5.1",
-          "input_ue_unconnectable": {}
-        }
-      },
-      "color": "#432",
-      "bgcolor": "#653"
-    },
-    {
-      "id": 1572,
-      "type": "Reroute",
-      "pos": [
-        -870,
-        7180
-      ],
-      "size": [
-        75,
-        26
-      ],
-      "flags": {},
-      "order": 31,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "",
-          "type": "*",
-          "link": 3210
-        }
-      ],
-      "outputs": [
-        {
-          "name": "",
-          "type": "SCAIL_POSE_SEQUENCE",
-          "links": null
-        }
-      ],
-      "properties": {
-        "showOutputText": false,
-        "horizontal": false,
-        "ue_properties": {
-          "widget_ue_connectable": {},
-          "version": "7.5.1",
-          "input_ue_unconnectable": {}
-        }
-      },
-      "color": "#432",
-      "bgcolor": "#653"
-    },
-    {
-      "id": 1573,
-      "type": "SCAILAISTFullSequence",
-      "pos": [
-        -1170,
-        7240
-      ],
-      "size": [
-        250,
-        220
-      ],
-      "flags": {},
-      "order": 23,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "library",
-          "type": "AIST_FULL_LIBRARY",
-          "link": 3211
-        },
-        {
-          "name": "audio_features",
-          "type": "SCAIL_AUDIO_FEATURES",
-          "link": null
-        },
-        {
-          "name": "reference_pose",
-          "shape": 7,
-          "type": "SCAIL_POSE",
-          "link": null
-        },
-        {
-          "name": "beat_info",
-          "shape": 7,
-          "type": "SCAIL_BEAT_INFO",
-          "link": null
-        }
-      ],
-      "outputs": [
-        {
-          "name": "pose_sequence",
-          "type": "SCAIL_POSE_SEQUENCE",
-          "links": [
-            3210
-          ]
-        }
-      ],
-      "properties": {
-        "ue_properties": {
-          "widget_ue_connectable": {},
-          "input_ue_unconnectable": {},
-          "version": "7.5.1"
-        },
-        "aux_id": "ckinpdx/ComfyUI-SCAIL-AudioReactive",
-        "ver": "7c098042e7359663189955c342eb7d3721ec3aa4",
-        "Node name for S&R": "SCAILAISTFullSequence"
-      },
-      "widgets_values": [
-        "la_hip_hop",
-        12,
-        0,
-        2354835776,
-        "randomize"
-      ],
-      "color": "#432",
-      "bgcolor": "#653"
-    },
-    {
-      "id": 1570,
-      "type": "SCAILAISTFullLoader",
-      "pos": [
-        -1190,
-        7080
-      ],
-      "size": [
-        270,
-        90
-      ],
-      "flags": {},
-      "order": 12,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "library",
-          "type": "AIST_FULL_LIBRARY",
-          "links": [
-            3211
-          ]
-        }
-      ],
-      "properties": {
-        "ue_properties": {
-          "widget_ue_connectable": {},
-          "input_ue_unconnectable": {},
-          "version": "7.5.1"
-        },
-        "aux_id": "ckinpdx/ComfyUI-SCAIL-AudioReactive",
-        "ver": "7c098042e7359663189955c342eb7d3721ec3aa4",
-        "Node name for S&R": "SCAILAISTFullLoader"
-      },
-      "widgets_values": [
-        "C:\\ComfyUI\\models\\aist_full",
-        true
-      ],
-      "color": "#432",
-      "bgcolor": "#653"
-    },
-    {
-      "id": 1574,
-      "type": "Reroute",
-      "pos": [
-        -770,
-        7120
-      ],
-      "size": [
-        75,
-        26
-      ],
-      "flags": {},
-      "order": 40,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "",
-          "type": "*",
-          "link": 3212
-        }
-      ],
-      "outputs": [
-        {
-          "name": "",
-          "type": "PT_POSE_SEQUENCE",
-          "links": [
-            3213
-          ]
-        }
-      ],
-      "properties": {
-        "showOutputText": false,
-        "horizontal": false,
-        "ue_properties": {
-          "widget_ue_connectable": {},
-          "version": "7.5.1",
-          "input_ue_unconnectable": {}
-        }
-      },
-      "color": "#432",
-      "bgcolor": "#653"
     },
     {
       "id": 1566,
@@ -2939,6 +2673,8 @@
         }
       ],
       "properties": {
+        "aux_id": "ckinpdx/ComfyUI-PoseTracks",
+        "ver": "0950c4c3fcec8991d4273994314164ba627902be",
         "Node name for S&R": "PTAISTBeatDance",
         "ue_properties": {
           "widget_ue_connectable": {},
@@ -2948,7 +2684,7 @@
       },
       "widgets_values": [
         true,
-        false,
+        true,
         false,
         false,
         false,
@@ -2961,11 +2697,289 @@
         16,
         2,
         1,
-        2384424860,
+        2066927543,
         "randomize"
       ],
       "color": "#432",
       "bgcolor": "#653"
+    },
+    {
+      "id": 1412,
+      "type": "PrimitiveInt",
+      "pos": [
+        -1330,
+        5860
+      ],
+      "size": [
+        210,
+        90
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "INT",
+          "type": "INT",
+          "links": [
+            2820,
+            2833,
+            3209,
+            3221
+          ]
+        }
+      ],
+      "title": "FADE: Seed",
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.16.2",
+        "Node name for S&R": "PrimitiveInt",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.7"
+        }
+      },
+      "widgets_values": [
+        25,
+        "fixed"
+      ],
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 1572,
+      "type": "Reroute",
+      "pos": [
+        -870,
+        7180
+      ],
+      "size": [
+        75,
+        26
+      ],
+      "flags": {},
+      "order": 31,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "",
+          "type": "*",
+          "link": 3222
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "PT_POSE_SEQUENCE",
+          "links": []
+        }
+      ],
+      "properties": {
+        "showOutputText": false,
+        "horizontal": false,
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "7.5.1",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "color": "#2a363b",
+      "bgcolor": "#3f5159"
+    },
+    {
+      "id": 1576,
+      "type": "PTAISTFullLoader",
+      "pos": [
+        -1250,
+        7020
+      ],
+      "size": [
+        270,
+        82
+      ],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "library",
+          "type": "AIST_FULL_LIBRARY",
+          "links": [
+            3220
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "aux_id": "ckinpdx/ComfyUI-PoseTracks",
+        "ver": "0950c4c3fcec8991d4273994314164ba627902be",
+        "Node name for S&R": "PTAISTFullLoader"
+      },
+      "widgets_values": [
+        "C:\\ComfyUI\\models\\aist_full",
+        true
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 1577,
+      "type": "PTAISTFullSequence",
+      "pos": [
+        -1250,
+        7160
+      ],
+      "size": [
+        282.4833297729492,
+        214
+      ],
+      "flags": {},
+      "order": 23,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "library",
+          "type": "AIST_FULL_LIBRARY",
+          "link": 3220
+        },
+        {
+          "name": "audio_features",
+          "type": "PT_AUDIO_FEATURES",
+          "link": null
+        },
+        {
+          "name": "reference_pose",
+          "shape": 7,
+          "type": "PT_POSE",
+          "link": null
+        },
+        {
+          "name": "beat_info",
+          "shape": 7,
+          "type": "PT_BEAT_INFO",
+          "link": null
+        },
+        {
+          "name": "seed",
+          "type": "INT",
+          "widget": {
+            "name": "seed"
+          },
+          "link": 3221
+        }
+      ],
+      "outputs": [
+        {
+          "name": "pose_sequence",
+          "type": "PT_POSE_SEQUENCE",
+          "links": [
+            3222
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "aux_id": "ckinpdx/ComfyUI-PoseTracks",
+        "ver": "0950c4c3fcec8991d4273994314164ba627902be",
+        "Node name for S&R": "PTAISTFullSequence"
+      },
+      "widgets_values": [
+        "break",
+        12,
+        0,
+        0,
+        "randomize"
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 1575,
+      "type": "Reroute",
+      "pos": [
+        -760,
+        7110
+      ],
+      "size": [
+        75,
+        26
+      ],
+      "flags": {},
+      "order": 40,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "",
+          "type": "*",
+          "link": 3224
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "PT_POSE_SEQUENCE",
+          "links": [
+            3223
+          ]
+        }
+      ],
+      "properties": {
+        "showOutputText": false,
+        "horizontal": false
+      },
+      "color": "#2a363b",
+      "bgcolor": "#3f5159"
+    },
+    {
+      "id": 1571,
+      "type": "Reroute",
+      "pos": [
+        -870,
+        7060
+      ],
+      "size": [
+        75,
+        26
+      ],
+      "flags": {},
+      "order": 39,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "",
+          "type": "*",
+          "link": 3214
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "PT_POSE_SEQUENCE",
+          "links": [
+            3224
+          ]
+        }
+      ],
+      "properties": {
+        "showOutputText": false,
+        "horizontal": false,
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "7.5.1",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "color": "#2a363b",
+      "bgcolor": "#3f5159"
     }
   ],
   "links": [
@@ -3570,42 +3584,50 @@
       "INT"
     ],
     [
-      3210,
-      1573,
+      3214,
+      1566,
       0,
-      1572,
+      1571,
       0,
-      "SCAIL_POSE_SEQUENCE"
+      "PT_POSE_SEQUENCE"
     ],
     [
-      3211,
-      1570,
+      3220,
+      1576,
       0,
-      1573,
+      1577,
       0,
       "AIST_FULL_LIBRARY"
     ],
     [
-      3212,
-      1571,
+      3221,
+      1412,
       0,
-      1574,
-      0,
-      "*"
+      1577,
+      4,
+      "INT"
     ],
     [
-      3213,
-      1574,
+      3222,
+      1577,
+      0,
+      1572,
+      0,
+      "PT_POSE_SEQUENCE"
+    ],
+    [
+      3223,
+      1575,
       0,
       1567,
       0,
       "PT_POSE_SEQUENCE"
     ],
     [
-      3214,
-      1566,
-      0,
+      3224,
       1571,
+      0,
+      1575,
       0,
       "PT_POSE_SEQUENCE"
     ]
@@ -4014,10 +4036,10 @@
     "ue_links": [],
     "links_added_by_ue": [],
     "ds": {
-      "scale": 0.34522712143936635,
+      "scale": 0.19487171000003262,
       "offset": [
-        3700.746703293636,
-        -5341.047410174756
+        4148.039265833244,
+        -3822.858706845176
       ]
     }
   },
