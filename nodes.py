@@ -41,6 +41,9 @@ BONE_COLORS = [
     [1.0, 0.15, 0.72, 0.8], [0.32, 0.15, 1.0, 0.8],
 ]
 
+# Average head-to-ankle height in AIST++ coordinate space
+AIST_AVG_HEIGHT = 136.0
+
 # ============================================================================
 # AUDIO FEATURE EXTRACTION
 # ============================================================================
@@ -307,6 +310,47 @@ def apply_chain_rotation(joints, pivot_idx, chain, axis, angle):
             res[idx] = rotate_point(joints[idx], pivot, axis, angle)
     return res
 
+def apply_chain_rotation_axis(joints, pivot_idx, chain, axis_vec, angle):
+    """Rotate chain joints around an arbitrary axis (Rodrigues' rotation formula)."""
+    res = joints.copy()
+    pivot = joints[pivot_idx]
+    k = np.asarray(axis_vec, dtype=np.float64)
+    k_len = np.linalg.norm(k)
+    if k_len < 1e-8:
+        return res
+    k = k / k_len
+    cos_a, sin_a = np.cos(angle), np.sin(angle)
+    for idx in chain:
+        if idx != pivot_idx:
+            p = joints[idx] - pivot
+            rotated = p * cos_a + np.cross(k, p) * sin_a + k * np.dot(k, p) * (1.0 - cos_a)
+            res[idx] = pivot + rotated
+    return res
+
+def elbow_bend_axis(joints, shoulder_idx, elbow_idx):
+    """
+    Return the local bend axis for an elbow.
+
+    The axis is perpendicular to the upper-arm direction and lies in the
+    plane spanned by the arm and the body's forward (Z) axis.  This makes
+    'bend' behave like a real hinge joint regardless of how much the arm
+    has been raised — avoiding the world-X artifact that causes the forearm
+    to point straight down when the upper arm is already near-vertical.
+    """
+    arm_vec = joints[elbow_idx] - joints[shoulder_idx]
+    arm_len = np.linalg.norm(arm_vec)
+    if arm_len < 1e-8:
+        return np.array([1.0, 0.0, 0.0])   # degenerate fallback
+    arm_dir = arm_vec / arm_len
+    body_fwd = np.array([0.0, 0.0, 1.0])
+    axis = np.cross(arm_dir, body_fwd)
+    axis_len = np.linalg.norm(axis)
+    if axis_len < 0.1:                      # arm parallel to Z — use lateral axis
+        axis = np.array([1.0, 0.0, 0.0])
+    else:
+        axis = axis / axis_len
+    return axis
+
 # ============================================================================
 # EASING FUNCTIONS
 # ============================================================================
@@ -488,17 +532,40 @@ MOVE_COMBOS = {
         ["step_left", "step_right", "step_left", "step_right"],
         ["lean_left", "lean_right", "lean_left", "lean_right"],
         ["step_left", "lean_left", "step_right", "lean_right"],
+        ["slide_left", "neutral", "slide_right", "neutral"],
+        ["lean_left", "arms_crossed_low", "lean_right", "arms_crossed_low"],
+        ["confident_stance", "lean_left", "confident_stance", "lean_right"],
+        ["swagger_lean", "step_left", "swagger_lean", "step_right"],
+        ["step_left", "step_right", "lean_left", "lean_right", "step_left", "neutral", "step_right", "neutral"],
+        ["neutral", "lean_left", "arms_crossed_low", "lean_right", "neutral", "step_left", "neutral", "step_right"],
     ],
     "medium": [
         ["pump_left_hard", "pump_right_hard", "pump_left_hard", "pump_right_hard"],
-        ["arms_wide", "step_left", "arms_wide", "step_right"], 
+        ["arms_wide", "step_left", "arms_wide", "step_right"],
         ["step_left", "arms_up_open", "step_right", "arms_up_open"],
         ["lean_left", "pump_left_hard", "lean_right", "pump_right_hard"],
+        ["dab", "neutral", "pop_lock", "neutral"],
+        ["running_man", "neutral", "step_left", "step_right"],
+        ["floss_right", "floss_left", "floss_right", "floss_left"],
+        ["step_left", "disco_point_up", "step_right", "disco_point_down"],
+        ["tutting", "step_left", "robot_arms", "step_right"],
+        ["pump_left_hard", "lean_right", "pump_right_hard", "lean_left", "arms_up_open", "neutral", "power_crouch", "neutral"],
+        ["arms_up_open", "lean_left", "arms_wide", "lean_right", "neutral", "pump_right_hard", "neutral", "pump_left_hard"],
+        ["dab", "step_left", "pop_lock", "step_right", "lean_left", "pump_right_hard", "lean_right", "pump_left_hard"],
+        ["floss_right", "arms_up_open", "floss_left", "power_crouch", "step_right", "neutral", "step_left", "neutral"],
     ],
     "high": [
         ["pump_right_hard", "pump_right_hard", "pump_left_hard", "pump_left_hard"],
-        ["arms_up_open", "arms_wide", "power_crouch", "arms_wide"], 
+        ["arms_up_open", "arms_wide", "power_crouch", "arms_wide"],
         ["lean_left", "pump_right_hard", "lean_right", "pump_left_hard"],
+        ["breakdance_freeze", "pop_lock", "running_man", "windmill_right"],
+        ["jump_prep", "jump_peak", "power_crouch", "arms_up_open"],
+        ["gangnam_style", "pop_lock", "dab", "breakdance_freeze"],
+        ["windmill_right", "arms_up_open", "windmill_left", "power_crouch"],
+        ["pump_right_hard", "arms_up_open", "pump_left_hard", "arms_up_open", "power_crouch", "arms_wide", "lean_left", "lean_right"],
+        ["star_jump", "power_crouch", "arms_up_open", "lean_left", "star_jump", "power_crouch", "arms_up_open", "lean_right"],
+        ["jump_prep", "jump_peak", "arms_up_open", "pump_right_hard", "lean_left", "pump_left_hard", "lean_right", "power_crouch"],
+        ["breakdance_freeze", "windmill_right", "pop_lock", "windmill_left", "power_crouch", "arms_up_open", "running_man", "neutral"],
     ]
 }
 
@@ -697,20 +764,21 @@ class PTBeatDrivenPose:
         r_shoulder = char_pose[2]
         r_upper_arm_len = np.linalg.norm(char_pose[3] - char_pose[2])
         r_forearm_len = np.linalg.norm(char_pose[4] - char_pose[3])
-        
-        # Neutral arm position: slightly down and forward (relaxed idle)
-        r_arm_dir = np.array([-0.8, 0.5, 0.2])  # Down, slightly out, slightly forward
+
+        # Neutral arm: hanging straight down with slight outward angle.
+        # raise=0 → arm down, raise=90 → arm horizontal, raise=140 → arm raised high.
+        r_arm_dir = np.array([-0.15, 0.98, 0.12])  # Mostly down, slightly outward, slightly forward
         r_arm_dir = r_arm_dir / (np.linalg.norm(r_arm_dir) + 1e-8)
         neutral[3] = r_shoulder + r_arm_dir * r_upper_arm_len  # elbow
         neutral[4] = neutral[3] + r_arm_dir * r_forearm_len    # wrist
-        
+
         # Left arm: shoulder(5) -> elbow(6) -> wrist(7)
         l_shoulder = char_pose[5]
         l_upper_arm_len = np.linalg.norm(char_pose[6] - char_pose[5])
         l_forearm_len = np.linalg.norm(char_pose[7] - char_pose[6])
-        
+
         # Mirror for left arm
-        l_arm_dir = np.array([0.8, 0.5, 0.2])  # Down, slightly out (mirrored), slightly forward
+        l_arm_dir = np.array([0.15, 0.98, 0.12])  # Mostly down, slightly outward (mirrored), slightly forward
         l_arm_dir = l_arm_dir / (np.linalg.norm(l_arm_dir) + 1e-8)
         neutral[6] = l_shoulder + l_arm_dir * l_upper_arm_len  # elbow
         neutral[7] = neutral[6] + l_arm_dir * l_forearm_len    # wrist
@@ -735,7 +803,16 @@ class PTBeatDrivenPose:
                     axis = self.AXES[motion]
                     rad = np.radians(deg)
                     if "left" in group and motion in ["raise", "tilt"]: rad = -rad
-                    res = apply_chain_rotation(res, self.PIVOTS[group], self.GROUPS[group], axis, rad)
+                    # Elbow bend: use local arm-frame axis to avoid forearm-points-down artifact
+                    # when upper arm is raised high (world-X bend breaks at large raise angles)
+                    if motion == "bend" and group == "right_elbow":
+                        axis_vec = elbow_bend_axis(res, 2, 3)
+                        res = apply_chain_rotation_axis(res, 3, self.GROUPS[group], axis_vec, rad)
+                    elif motion == "bend" and group == "left_elbow":
+                        axis_vec = elbow_bend_axis(res, 5, 6)
+                        res = apply_chain_rotation_axis(res, 6, self.GROUPS[group], axis_vec, rad)
+                    else:
+                        res = apply_chain_rotation(res, self.PIVOTS[group], self.GROUPS[group], axis, rad)
         
         for target, off in pose_def.get("translations", {}).items():
             vec = np.array([off.get("x",0), off.get("y",0), off.get("z",0)]) * scale_factor
@@ -753,12 +830,21 @@ class PTBeatDrivenPose:
     def _apply_continuous_groove(self, joints, time, tempo, amount, scale_factor=1.0):
         beat_period = 60.0 / (tempo + 1e-5)
         phase = (time / beat_period) * 2 * np.pi
-        sway = np.sin(phase * 0.5) * 20.0 * amount * scale_factor
-        bounce = np.abs(np.cos(phase)) * 8.0 * amount * scale_factor
-        indices = [1, 2, 5, 8, 11] # Neck, Shoulders, Hips
-        joints[indices, 0] += sway
-        joints[indices, 1] += bounce
-        joints = apply_chain_rotation(joints, 1, [0, 14, 15, 16, 17], 2, np.radians(-sway * 0.1))
+        sway = np.sin(phase * 0.5) * 12.0 * amount * scale_factor
+        bounce = np.abs(np.cos(phase)) * 4.0 * amount * scale_factor
+
+        # Hips sway independently — don't drag shoulders along
+        joints[[8, 11], 0] += sway
+        joints[[8, 11], 1] += bounce * 0.5
+
+        # Upper body counter-sways at reduced amplitude (natural hip isolation)
+        joints[[1, 2, 5], 0] -= sway * 0.25
+
+        # Head bobs loosely in hip direction
+        joints[[0, 14, 15, 16, 17], 0] += sway * 0.15
+
+        # Spine twist follows hip rotation
+        joints = apply_chain_rotation(joints, 1, [0, 14, 15, 16, 17], 2, np.radians(-sway * 0.08))
         return joints
 
     def generate(self, base_pose, beat_info, audio_features, dance_style, interaction_mode, energy_style, motion_smoothness, anticipation, groove_amount, bass_intensity, treble_intensity, phrase_bars, staging_mode, hit_easing, pose_blend, loop_mode, seed):
@@ -924,85 +1010,105 @@ class PTBeatDrivenPose:
             char_neutral = self._create_neutral_structure(char_ref)
             current_targets[c] = char_neutral
 
+        # Pre-compute beat count per frame for treble arm alternation
+        beat_counts = np.zeros(frame_count, dtype=int)
+        for bf in beat_frames:
+            if 0 <= bf < frame_count:
+                beat_counts[bf:] += 1
+
+        # Downbeat window: how many frames around a downbeat count as "on" the accent
+        downbeat_window = max(2, int(frames_per_beat * 0.15))
+        downbeat_set = set(int(df) for df in downbeat_frames)
+
         for i in range(frame_count):
             full_target_pose = []
+
+            is_near_downbeat = any(abs(i - df) <= downbeat_window for df in downbeat_set)
+
             for c in range(char_count):
                 char_ref = base_joints_all[c*18:(c+1)*18]
                 scale = self._get_body_scale(char_ref)
-                
+
                 times = char_keyframe_times[c]
                 poses = char_keyframe_poses[c]
-                
-                # Find surrounding keyframes for blending
+
+                # Find surrounding keyframes
                 prev_idx = 0
                 for idx, t in enumerate(times):
                     if t <= i:
                         prev_idx = idx
                     else:
                         break
-                
+
                 next_idx = min(prev_idx + 1, len(times) - 1)
                 prev_time = times[prev_idx]
                 next_time = times[next_idx]
                 prev_pose_name = poses[prev_idx]
                 next_pose_name = poses[next_idx]
-                
+
                 prev_pose = get_pose_for_char(c, prev_pose_name)
                 next_pose = get_pose_for_char(c, next_pose_name)
-                
-                # Calculate blend factor with easing
+
+                # Blend formula: pose_blend controls how early the transition starts.
+                # 0 = hold current pose, snap right before next keyframe (punchy).
+                # 1 = start transitioning immediately (smooth).
                 if next_time > prev_time:
                     raw_t = (i - prev_time) / (next_time - prev_time)
                     raw_t = np.clip(raw_t, 0.0, 1.0)
-                    # Apply easing function
-                    eased_t = easing_func(raw_t)
-                    # Apply pose_blend parameter (0 = snap to keyframes, 1 = full blend)
-                    blend_t = eased_t * pose_blend + (1.0 if raw_t >= 1.0 else 0.0) * (1.0 - pose_blend)
+                    # Shift the transition window based on pose_blend
+                    hold_until = 1.0 - pose_blend
+                    adjusted_t = (raw_t - hold_until) / max(pose_blend, 1e-4)
+                    adjusted_t = np.clip(adjusted_t, 0.0, 1.0)
+                    blend_t = easing_func(adjusted_t)
                 else:
                     blend_t = 1.0
-                
-                # Blend between poses
+
                 blended_pose = prev_pose * (1.0 - blend_t) + next_pose * blend_t
                 current_targets[c] = blended_pose
-                
-                # Apply staging offset with smooth interpolation
+
+                # Staging: faster blend so position changes are visible
                 if staging_mode != "off":
                     st = char_stage_targets[c]
-                    # Smooth interpolation toward target
-                    blend = 0.02  # Gradual movement
-                    st["current"] = st["current"] * (1 - blend) + st["target"] * blend
-                    
-                    # Clamp to safe range (don't let characters walk out of frame)
-                    max_offset = 0.5  # Maximum normalized offset
+                    st["current"] = st["current"] * 0.92 + st["target"] * 0.08
+                    max_offset = 0.5
                     st["current"][0] = np.clip(st["current"][0], -max_offset, max_offset)
                     st["current"][1] = np.clip(st["current"][1], -max_offset * 0.4, max_offset * 0.4)
-                    
-                    stage_offset = st["current"] * scale * 120  # Scale to world units
+                    stage_offset = st["current"] * scale * 120
                     current_targets[c] = current_targets[c] + stage_offset
-                
-                char_ref = base_joints_all[c * 18:(c + 1) * 18]
-                scale = self._get_body_scale(char_ref)
+
                 time_sec = i / fps
 
-                # Groove: applied to target so bone constraints propagate correctly
+                # Groove: isolated hip sway with upper body counter
                 current_targets[c] = self._apply_continuous_groove(
                     current_targets[c], time_sec, tempo, groove_amount, scale_factor=scale
                 )
 
-                # Bass: vertical bounce on entire body (not just trunk joints)
-                bounce = bass[i] * bass_intensity * 10.0 * scale
-                current_targets[c][:, 1] += bounce
+                # Bass: body compression — drop hips/upper body only.
+                # Do NOT rotate ankles around knees; that lifts both feet simultaneously.
+                if bass[i] > 0.02:
+                    compress = bass[i] * bass_intensity * scale
+                    hip_drop = compress * 14.0
+                    current_targets[c][[8, 11, 1, 2, 5], 1] += hip_drop
 
-                # Treble: alternating arm leads so both shoulders don't mirror
-                if treble[i] > 0.1:
-                    t_val = treble[i] * treble_intensity * 15.0
-                    lead_arm_root, lead_chain = (3, [3, 4]) if (i // 2) % 2 == 0 else (6, [6, 7])
-                    follow_arm_root, follow_chain = (6, [6, 7]) if (i // 2) % 2 == 0 else (3, [3, 4])
+                # Downbeat accent: extra compression on beat 1 of each bar
+                if is_near_downbeat and bass_intensity > 0:
+                    accent = bass_intensity * scale * 0.55
+                    current_targets[c][[8, 11, 1, 2, 5], 1] += 10.0 * accent
+
+                # Treble: arm accents, alternating per beat (not per frame)
+                if treble[i] > 0.08:
+                    t_val = treble[i] * treble_intensity * 22.0
+                    if beat_counts[i] % 2 == 0:
+                        lead_root, lead_chain = 3, [4]        # right forearm flick up
+                        follow_root, follow_chain = 6, [7]    # left forearm settles
+                    else:
+                        lead_root, lead_chain = 6, [7]
+                        follow_root, follow_chain = 3, [4]
                     current_targets[c] = apply_chain_rotation(
-                        current_targets[c], lead_arm_root, lead_chain, 0, np.radians(t_val)
+                        current_targets[c], lead_root, lead_chain, 0, np.radians(t_val)
                     )
                     current_targets[c] = apply_chain_rotation(
-                        current_targets[c], follow_arm_root, follow_chain, 0, np.radians(-t_val * 0.6)
+                        current_targets[c], follow_root, follow_chain, 0, np.radians(-t_val * 0.5)
                     )
 
                 full_target_pose.append(current_targets[c])
@@ -1010,18 +1116,31 @@ class PTBeatDrivenPose:
             flat_target = np.concatenate(full_target_pose, axis=0)
             urgency = 1.0 / motion_smoothness
             if bass[i] > 0.7: urgency *= 1.5
+            if is_near_downbeat: urgency *= 1.4
 
             joints = motion.step_towards(flat_target, urgency)
 
-            # Post-physics: head tilt compensation only
+            # Post-physics corrections
             for c in range(char_count):
                 start = c * 18
                 end = (c + 1) * 18
                 char_joints = joints[start:end]
 
+                # Head tilt compensation
                 hip_mid_x = (char_joints[8, 0] + char_joints[11, 0]) / 2.0
                 tilt = (char_joints[1, 0] - hip_mid_x) * 0.1
                 char_joints = apply_chain_rotation(char_joints, 1, [0, 14, 15, 16, 17], 2, np.radians(-tilt * 0.5))
+
+                # Ankle ground clamp: prevent feet from floating above reference level.
+                # In Y-down coords, ground = max Y for ankle. Lifting = smaller Y value.
+                # Allow a small tolerance for natural toe-off in steps.
+                for ankle_idx, knee_idx in [(10, 9), (13, 12)]:
+                    ref_y = base_joints_all[c * 18 + ankle_idx, 1]
+                    lift = ref_y - char_joints[ankle_idx, 1]
+                    if lift > 8.0:  # only clamp lifts larger than 8 units (allow natural toe-off)
+                        char_joints[ankle_idx, 1] += lift - 8.0
+                        # Pull knee along so lower-leg proportions stay reasonable
+                        char_joints[knee_idx, 1] += (lift - 8.0) * 0.4
 
                 joints[start:end] = char_joints
 
@@ -1067,25 +1186,27 @@ class PTPoseRenderer:
         import taichi as ti
         
         rw, rh = (width//2, height//2) if auto_half_resolution else (width, height)
-        scale = 0.5 if auto_half_resolution else 1.0
-        
+
         try: ti.init(arch=ti.gpu, default_fp=ti.f32)
         except: ti.init(arch=ti.cpu, default_fp=ti.f32)
-        
+
         poses, limb_seq, colors = pose_sequence["poses"], pose_sequence["limb_seq"], pose_sequence["bone_colors"]
-        
+
         fov_rad = np.radians(fov)
+        # Focal is computed for the render canvas size; halved for half-res.
+        # Do NOT scale joint x/y — they are camera-space coords, and the focal
+        # already handles the resolution difference via perspective projection.
         focal = max(rh, rw) / (np.tan(fov_rad/2) * 2)
         avg_z = np.mean([p[1,2] for p in poses]) if poses else 800.0
         cyl_radius = cylinder_pixel_radius * avg_z / focal
-        
+
         specs_list = []
         for joints in poses:
             frame_specs = []
             for i, (s, e) in enumerate(limb_seq):
                 if s >= len(joints) or e >= len(joints): continue # Safety check
-                sp = joints[s].copy() * np.array([scale, scale, 1])
-                ep = joints[e].copy() * np.array([scale, scale, 1])
+                sp = joints[s].copy()
+                ep = joints[e].copy()
                 if np.sum(np.abs(sp)) > 1e-3:
                     frame_specs.append((sp.tolist(), ep.tolist(), colors[i % len(colors)]))
             specs_list.append(frame_specs)
@@ -1250,6 +1371,125 @@ class PTAlignPoseToReference:
 
         return ({"poses": poses, "limb_seq": pose_sequence["limb_seq"], "bone_colors": pose_sequence["bone_colors"]},)
         
+# ============================================================================
+# POSE SEQUENCE → OPENPOSE JSON + 2D RENDERER
+# ============================================================================
+
+def _project_pt_sequence(pose_sequence, width, height, fov):
+    """
+    Project PT_POSE_SEQUENCE 3D camera-space coords to 2D pixel coords.
+
+    PT_POSE stores joints as (x, y, z) in 3D camera space (origin at camera,
+    z=depth). Taichi re-projects via ray marching; we do it explicitly:
+        pixel_x = x * focal/z + cx
+        pixel_y = y * focal/z + cy
+    """
+    focal = max(width, height) / (2.0 * np.tan(np.radians(fov / 2.0)))
+    cx, cy = width / 2.0, height / 2.0
+
+    frames = pose_sequence["poses"]
+    out = []
+    for frame_joints in frames:
+        arr = np.array(frame_joints, dtype=np.float32)
+        n = arr.shape[0] // 18
+        arr = arr[:n * 18].reshape(n, 18, 3)  # (n_chars, 18, 3)
+
+        people = []
+        for char in arr:
+            kps = []
+            for joint in char:
+                x, y, z = float(joint[0]), float(joint[1]), float(joint[2])
+                z = z if z > 0.01 else 800.0  # guard against zero depth
+                px = x * focal / z + cx
+                py = y * focal / z + cy
+                kps.extend([px, py, 1.0])
+            people.append({
+                "pose_keypoints_2d": kps,
+                "face_keypoints_2d": [],
+                "hand_left_keypoints_2d": [],
+                "hand_right_keypoints_2d": [],
+            })
+
+        out.append({
+            "people": people,
+            "canvas_height": height,
+            "canvas_width": width,
+        })
+    return out
+
+
+class PTPoseSequenceToDWPose:
+    """
+    Converts a PT_POSE_SEQUENCE to OpenPose POSE_KEYPOINT format so it can be
+    fed into ControlNet preprocessors and other nodes that accept pose keypoints.
+    """
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "pose_sequence": ("PT_POSE_SEQUENCE", {}),
+                "width":  ("INT", {"default": 512, "min": 64, "max": 8192}),
+                "height": ("INT", {"default": 512, "min": 64, "max": 8192}),
+                "fov":    ("FLOAT", {"default": 55.0, "min": 10.0, "max": 120.0,
+                                     "tooltip": "Field of view — must match the value used in PT Pose from DWPose"}),
+            }
+        }
+
+    RETURN_TYPES = ("POSE_KEYPOINT",)
+    RETURN_NAMES = ("pose_keypoint",)
+    FUNCTION = "convert"
+    CATEGORY = "PoseTracks"
+
+    def convert(self, pose_sequence, width, height, fov):
+        return (_project_pt_sequence(pose_sequence, width, height, fov),)
+
+
+class PTPoseRenderer2D:
+    """
+    Renders a PT_POSE_SEQUENCE as standard 2D OpenPose stick-figure images.
+    No Taichi required — uses the same draw_poses used by ControlNet.
+    """
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "pose_sequence": ("PT_POSE_SEQUENCE", {}),
+                "width":  ("INT", {"default": 512, "min": 64, "max": 8192}),
+                "height": ("INT", {"default": 512, "min": 64, "max": 8192}),
+                "fov":    ("FLOAT", {"default": 55.0, "min": 10.0, "max": 120.0,
+                                     "tooltip": "Field of view — must match the value used in PT Pose from DWPose"}),
+            }
+        }
+
+    RETURN_TYPES = ("IMAGE",)
+    RETURN_NAMES = ("images",)
+    FUNCTION = "render"
+    CATEGORY = "PoseTracks"
+
+    def render(self, pose_sequence, width, height, fov):
+        try:
+            from custom_controlnet_aux.dwpose import draw_poses, decode_json_as_poses
+        except ImportError:
+            import sys, os
+            aux_path = os.path.join(os.path.dirname(__file__), "..", "comfyui_controlnet_aux", "src")
+            if aux_path not in sys.path:
+                sys.path.insert(0, aux_path)
+            from custom_controlnet_aux.dwpose import draw_poses, decode_json_as_poses
+
+        frames_json = _project_pt_sequence(pose_sequence, width, height, fov)
+
+        rendered = []
+        for frame_json in frames_json:
+            poses, _, h, w = decode_json_as_poses(frame_json)
+            canvas = draw_poses(poses, h, w, draw_body=True, draw_hand=False, draw_face=False)
+            rendered.append(canvas.astype(np.float32) / 255.0)
+
+        out = np.stack(rendered, axis=0)  # (F, H, W, 3)
+        return (torch.from_numpy(out),)
+
+
 # ============================================================================
 # AIST++ CHUNK LIBRARY NODES
 # ============================================================================
@@ -1441,10 +1681,6 @@ class PTAISTBeatDance:
         # Determine number of characters from reference pose
         char_count = 1
         ref_data = []  # Store scale, floor_y, and center_x for each character
-        
-        # We need a sample AIST full height to calculate scale
-        # AIST full body Y-span is ~136 units (from lowest foot to head)
-        AIST_AVG_HEIGHT = 136.0
         
         def calc_leg_angle(hip, knee, ankle):
             """Calculate angle at knee - 180° = straight leg"""
@@ -2211,48 +2447,51 @@ class PTAISTFullSequence:
                         j = char_joints[joint_idx]
                         return abs(j[0]) > 1e-3 or abs(j[1]) > 1e-3 or abs(j[2]) > 1e-3
                     
-                    # Cascading detection for partial poses
-                    ref_height = None
+                    # Cascading scale detection — mirrors PTAISTBeatDance exactly
+                    full_height = None
+                    char_scale = None
                     scale_method = "default"
-                    
-                    # 1. Try neck to ankles (best)
-                    if is_valid(1) and (is_valid(10) or is_valid(13)):
-                        neck = char_joints[1]
+
+                    # 1. Full height head-to-ankle (best)
+                    if is_valid(0) and (is_valid(10) or is_valid(13)):
+                        head_y = char_joints[0][1]
                         l_ankle_y = char_joints[13][1] if is_valid(13) else char_joints[10][1]
                         r_ankle_y = char_joints[10][1] if is_valid(10) else char_joints[13][1]
-                        ankle_y = (l_ankle_y + r_ankle_y) / 2 if is_valid(10) and is_valid(13) else max(l_ankle_y, r_ankle_y)
-                        ref_height = abs(ankle_y - neck[1])
-                        if ref_height > 10:
-                            scale_method = "neck_to_ankle"
+                        foot_y = max(l_ankle_y, r_ankle_y)
+                        full_height = abs(foot_y - head_y)
+                        if full_height > 10:
+                            char_scale = full_height / AIST_AVG_HEIGHT
+                            scale_method = "full_height"
                         else:
-                            ref_height = None
-                    
-                    # 2. Try torso (neck to hips)
-                    if ref_height is None and is_valid(1) and (is_valid(8) or is_valid(11)):
+                            full_height = None
+
+                    # 2. Torso (neck to hips)
+                    if char_scale is None and is_valid(1) and (is_valid(8) or is_valid(11)):
                         neck = char_joints[1]
                         r_hip = char_joints[8] if is_valid(8) else char_joints[11]
                         l_hip = char_joints[11] if is_valid(11) else char_joints[8]
                         mid_hip = (r_hip + l_hip) / 2
                         torso_len = np.linalg.norm(neck - mid_hip)
                         if torso_len > 5:
-                            ref_height = torso_len * 2.1  # Estimate neck-to-ankle from torso
+                            full_height = torso_len * 2.5
+                            char_scale = full_height / AIST_AVG_HEIGHT
                             scale_method = "torso"
-                    
-                    # 3. Try shoulder width
-                    if ref_height is None and is_valid(2) and is_valid(5):
-                        r_shoulder = char_joints[2]
-                        l_shoulder = char_joints[5]
-                        shoulder_width = np.linalg.norm(l_shoulder - r_shoulder)
+
+                    # 3. Shoulder width
+                    if char_scale is None and is_valid(2) and is_valid(5):
+                        shoulder_width = np.linalg.norm(char_joints[5] - char_joints[2])
                         if shoulder_width > 5:
-                            ref_height = shoulder_width * 3.4  # Estimate neck-to-ankle from shoulders
+                            full_height = shoulder_width * 4
+                            char_scale = full_height / AIST_AVG_HEIGHT
                             scale_method = "shoulders"
-                    
+
                     # 4. Fallback
-                    if ref_height is None:
-                        ref_height = 200
+                    if char_scale is None:
+                        full_height = 200
+                        char_scale = 1.0
                         scale_method = "default"
-                    
-                    print(f"[AIST Full] Char {i}: scale_method={scale_method}, ref_height={ref_height:.1f}")
+
+                    print(f"[AIST Full] Char {i}: scale_method={scale_method}, full_height={full_height:.1f}, scale={char_scale:.3f}")
                     
                     # Get position/depth from best available joint
                     if is_valid(1):
@@ -2270,29 +2509,16 @@ class PTAISTFullSequence:
                     floor_y = max(valid_y) if valid_y else 400
                     
                     ref_data.append({
-                        'height': ref_height,
+                        'height': full_height,
+                        'scale': char_scale,
                         'floor_y': floor_y,
                         'center_x': center_x,
                         'depth_z': depth_z
                     })
                 else:
-                    ref_data.append({'height': 200, 'floor_y': 400, 'center_x': 256, 'depth_z': 800})
+                    ref_data.append({'height': 200, 'scale': 200.0 / AIST_AVG_HEIGHT, 'floor_y': 400, 'center_x': 256, 'depth_z': 800})
         else:
-            ref_data.append({'height': 200, 'floor_y': 400, 'center_x': 256, 'depth_z': 800})
-        
-        # Calculate scale from first frame
-        first_frame = sequence[start_frame]
-        l_shoulder = first_frame[5]
-        r_shoulder = first_frame[2]
-        l_hip = first_frame[11]
-        r_hip = first_frame[8]
-        shoulder_center = (l_shoulder + r_shoulder) / 2
-        hip_center = (l_hip + r_hip) / 2
-        torso_length = np.linalg.norm(shoulder_center - hip_center)
-        
-        ref = ref_data[0]
-        ref_torso = ref['height'] * 0.4
-        scale = ref_torso / torso_length if torso_length > 0 else 1.0
+            ref_data.append({'height': 200, 'scale': 200.0 / AIST_AVG_HEIGHT, 'floor_y': 400, 'center_x': 256, 'depth_z': 800})
         
         # Time scaling
         time_scale = source_fps / target_fps
@@ -2388,9 +2614,10 @@ class PTAISTFullSequence:
                 # Scale around center
                 pose_center_x = (shoulder_center[0] + hip_center[0]) / 2
                 pose_center_y = (shoulder_center[1] + hip_center[1]) / 2
-                
-                char_pose[:, 0] = (char_pose[:, 0] - pose_center_x) * scale
-                char_pose[:, 1] = (char_pose[:, 1] - pose_center_y) * scale
+                char_scale = char_ref.get('scale', 1.0)
+
+                char_pose[:, 0] = (char_pose[:, 0] - pose_center_x) * char_scale
+                char_pose[:, 1] = (char_pose[:, 1] - pose_center_y) * char_scale
                 char_pose[:, 2] = char_ref['depth_z']
                 
                 # Flip Y
@@ -2455,6 +2682,8 @@ NODE_CLASS_MAPPINGS = {
     "PTAISTChunkPreview": PTAISTChunkPreview,
     "PTAISTFullLoader": PTAISTFullLoader,
     "PTAISTFullSequence": PTAISTFullSequence,
+    "PTPoseSequenceToDWPose": PTPoseSequenceToDWPose,
+    "PTPoseRenderer2D": PTPoseRenderer2D,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -2470,4 +2699,6 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "PTAISTChunkPreview": "PT AIST Preview",
     "PTAISTFullLoader": "PT AIST Full Library",
     "PTAISTFullSequence": "PT AIST Full Sequence",
+    "PTPoseSequenceToDWPose": "PT Pose Sequence to DWPose",
+    "PTPoseRenderer2D": "PT Pose Render 2D",
 }
