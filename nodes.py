@@ -1174,23 +1174,29 @@ class PTPoseRenderer:
                 "auto_half_resolution": ("BOOLEAN", {"default": True, "tooltip": "Render at half res then upscale. Faster."}),
                 "fov": ("FLOAT", {"default": 55.0, "min": 10.0, "max": 120.0, "tooltip": "Field of view in degrees"}),
                 "cylinder_pixel_radius": ("FLOAT", {"default": 4.0, "min": 1.0, "max": 20.0, "tooltip": "Thickness of skeleton limbs"}),
+            },
+            "optional": {
+                "max_frames": ("INT", {"default": 0, "min": 0, "max": 10000,
+                                       "tooltip": "Limit render to this many frames. 0 = render all frames."}),
             }
         }
-    
+
     RETURN_TYPES = ("IMAGE",)
     RETURN_NAMES = ("pose_images",)
     FUNCTION = "render"
     CATEGORY = "PoseTracks"
-    
-    def render(self, pose_sequence, width, height, auto_half_resolution, fov, cylinder_pixel_radius):
+
+    def render(self, pose_sequence, width, height, auto_half_resolution, fov, cylinder_pixel_radius, max_frames=0):
         import taichi as ti
-        
+
         rw, rh = (width//2, height//2) if auto_half_resolution else (width, height)
 
         try: ti.init(arch=ti.gpu, default_fp=ti.f32)
         except: ti.init(arch=ti.cpu, default_fp=ti.f32)
 
         poses, limb_seq, colors = pose_sequence["poses"], pose_sequence["limb_seq"], pose_sequence["bone_colors"]
+        if max_frames > 0:
+            poses = poses[:max_frames]
 
         fov_rad = np.radians(fov)
         # Focal is computed for the render canvas size; halved for half-res.
@@ -1353,23 +1359,95 @@ class PTAlignPoseToReference:
         ref_joints = reference_pose["joints"]
         if isinstance(ref_joints, torch.Tensor):
             ref_joints = ref_joints.detach().cpu().numpy()
+        ref_joints = np.array(ref_joints, dtype=np.float32)
 
-        # Step 1: translate entire sequence so frame-0 neck sits at reference neck.
-        # This positions the motion relative to the reference without changing proportions.
-        offset = ref_joints[1] - poses[0][1]
-        for i in range(len(poses)):
-            poses[i] += offset
+        ref_char_count = ref_joints.shape[0] // 18
+        seq_char_count = poses[0].shape[0] // 18
 
-        # Step 2: force frame 0 = reference pose exactly, blend into the translated
-        # sequence over transition_frames. LTX requires frame 0 to match the reference
-        # image exactly — any mismatch breaks motion capture.
+        # --- helpers ---------------------------------------------------------
+        def torso_height(joints18):
+            """Neck-to-mid-hip distance as a stable skeleton size metric."""
+            neck    = joints18[1]
+            mid_hip = (joints18[8] + joints18[11]) / 2.0
+            return float(np.linalg.norm(mid_hip - neck))
+
+        def fit_char(seq18, ref18):
+            """Scale and translate a single-char (18,3) array to match ref18."""
+            ref_h = torso_height(ref18)
+            seq_h = torso_height(seq18)
+            scale = ref_h / seq_h if seq_h > 1e-3 else 1.0
+            # Scale around the sequence's own neck (scaling doesn't move the neck)
+            seq_neck = seq18[1]
+            scaled = seq_neck + scale * (seq18 - seq_neck)
+            # Translate so neck lands on ref neck
+            transformed = scaled + (ref18[1] - scaled[1])
+            return transformed, scale
+
+        ref_chars = [ref_joints[c * 18:(c + 1) * 18] for c in range(ref_char_count)]
+
+        if seq_char_count == 1 and ref_char_count > 1:
+            # ── Tile: duplicate the single sequence for every reference character ──
+            # Each copy is independently scaled + translated to its ref character.
+            new_poses = []
+            for frame_joints in poses:
+                seq18 = frame_joints  # (18, 3)
+                parts = [fit_char(seq18, rc)[0] for rc in ref_chars]
+                new_poses.append(np.concatenate(parts, axis=0))
+            poses = new_poses
+            out_char_count = ref_char_count
+            scales_info = [fit_char(pose_sequence["poses"][0], rc)[1] for rc in ref_chars]
+            print(f"[PTAlignPoseToReference] Tiled 1 seq → {ref_char_count} chars, "
+                  f"scales={[f'{s:.3f}' for s in scales_info]}")
+
+        elif seq_char_count == ref_char_count:
+            # ── 1-to-1: align each sequence character to its matching ref character ──
+            scales_info = []
+            for i in range(len(poses)):
+                parts = []
+                for c in range(seq_char_count):
+                    seq18 = poses[i][c * 18:(c + 1) * 18]
+                    transformed, scale = fit_char(seq18, ref_chars[c])
+                    parts.append(transformed)
+                    if i == 0:
+                        scales_info.append(scale)
+                poses[i] = np.concatenate(parts, axis=0)
+            out_char_count = seq_char_count
+            print(f"[PTAlignPoseToReference] 1-to-1 alignment, {seq_char_count} chars, "
+                  f"scales={[f'{s:.3f}' for s in scales_info]}")
+
+        else:
+            # ── Mismatch: align entire sequence to first reference character only ──
+            seq18 = poses[0][:18]
+            _, scale = fit_char(seq18, ref_chars[0])
+            for i in range(len(poses)):
+                transformed, _ = fit_char(poses[i][:18], ref_chars[0])
+                poses[i] = transformed
+            out_char_count = 1
+            print(f"[PTAlignPoseToReference] Char count mismatch (ref={ref_char_count}, "
+                  f"seq={seq_char_count}), aligned to first ref char, scale={scale:.3f}")
+
+        # Rebuild limb_seq / bone_colors if character count changed
+        if out_char_count != seq_char_count:
+            limb_seq = []
+            bone_colors = []
+            for c in range(out_char_count):
+                off = c * 18
+                for (s, e) in LIMB_SEQ:
+                    limb_seq.append((s + off, e + off))
+                bone_colors.extend(BONE_COLORS)
+        else:
+            limb_seq    = pose_sequence["limb_seq"]
+            bone_colors = pose_sequence["bone_colors"]
+
+        # Force frame 0 = reference pose exactly, blend into the aligned sequence
+        # over transition_frames so the motion starts from the exact ref image pose.
         blend_frames = min(transition_frames + 1, len(poses))
         for i in range(blend_frames):
             t = i / blend_frames
             t = t * t * (3.0 - 2.0 * t)  # smoothstep
             poses[i] = (1.0 - t) * ref_joints + t * poses[i]
 
-        return ({"poses": poses, "limb_seq": pose_sequence["limb_seq"], "bone_colors": pose_sequence["bone_colors"]},)
+        return ({"poses": poses, "limb_seq": limb_seq, "bone_colors": bone_colors},)
         
 # ============================================================================
 # POSE SEQUENCE → OPENPOSE JSON + 2D RENDERER
@@ -1460,6 +1538,10 @@ class PTPoseRenderer2D:
                 "height": ("INT", {"default": 512, "min": 64, "max": 8192}),
                 "fov":    ("FLOAT", {"default": 55.0, "min": 10.0, "max": 120.0,
                                      "tooltip": "Field of view — must match the value used in PT Pose from DWPose"}),
+            },
+            "optional": {
+                "max_frames": ("INT", {"default": 0, "min": 0, "max": 10000,
+                                       "tooltip": "Limit render to this many frames. 0 = render all frames."}),
             }
         }
 
@@ -1468,7 +1550,7 @@ class PTPoseRenderer2D:
     FUNCTION = "render"
     CATEGORY = "PoseTracks"
 
-    def render(self, pose_sequence, width, height, fov):
+    def render(self, pose_sequence, width, height, fov, max_frames=0):
         try:
             from custom_controlnet_aux.dwpose import draw_poses, decode_json_as_poses
         except ImportError:
@@ -1478,6 +1560,8 @@ class PTPoseRenderer2D:
                 sys.path.insert(0, aux_path)
             from custom_controlnet_aux.dwpose import draw_poses, decode_json_as_poses
 
+        if max_frames > 0:
+            pose_sequence = {**pose_sequence, "poses": pose_sequence["poses"][:max_frames]}
         frames_json = _project_pt_sequence(pose_sequence, width, height, fov)
 
         rendered = []
@@ -2669,6 +2753,376 @@ class PTAISTFullSequence:
 # MAPPINGS
 # ============================================================================
 
+class PTLoadDWPoseSequence:
+    """
+    Loads a DWPose keypoint sequence from a .pkl or .json file and outputs a
+    PT_POSE_SEQUENCE ready for rendering or alignment.
+
+    Supported input formats
+    -----------------------
+    .pkl  — Python pickle produced by DWPose / RealisDance.
+            Expected: a list of per-frame dicts with a 'bodies' key containing
+            'candidate' (shape Nx18x2, normalized 0-1 or pixel), or a list of
+            raw candidate arrays.
+
+    .json — OpenPose-compatible JSON.  Two sub-formats are accepted:
+            1. A list of per-frame dicts:
+               [{"people": [...], "canvas_width": W, "canvas_height": H}, ...]
+            2. A single dict with a top-level 'frames' list.
+            canvas_width / canvas_height are read from the file; the
+            image_width / image_height inputs are ignored when they are present.
+    """
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "file_path":     ("STRING", {"default": "", "tooltip": "Absolute path to .pkl or .json DWPose sequence file"}),
+                "source_width":  ("INT",   {"default": 576, "min": 64, "max": 8192,
+                                            "tooltip": "Width of the VIDEO the DWPose was extracted from — NOT your render canvas. "
+                                                       "Aspect ratio controls skeleton proportions. "
+                                                       "RealisDance-Val portrait = 576×1024, landscape = 1024×576."}),
+                "source_height": ("INT",   {"default": 1024, "min": 64, "max": 8192,
+                                            "tooltip": "Height of the VIDEO the DWPose was extracted from. "
+                                                       "RealisDance-Val portrait = 576×1024, landscape = 1024×576."}),
+                "depth":         ("FLOAT", {"default": 800.0, "min": 100.0, "max": 5000.0, "tooltip": "Assumed Z depth for 2D→3D conversion"}),
+                "fov":           ("FLOAT", {"default": 55.0,  "min": 10.0,  "max": 120.0,  "tooltip": "Field of view — must match your render FOV"}),
+                "smooth_sigma":  ("FLOAT", {"default": 1.5, "min": 0.0, "max": 10.0,
+                                            "tooltip": "Temporal smoothing (Gaussian sigma in frames). "
+                                                       "0 = off. 1–2 = light jitter removal. 3–5 = fluid/floaty."}),
+                "x_scale":       ("FLOAT", {"default": 1.0, "min": 0.1, "max": 5.0,
+                                            "tooltip": "Manual horizontal scale correction. >1 widens, <1 narrows. "
+                                                       "Use if width still looks wrong after setting correct source dims."}),
+                "max_frames":    ("INT",   {"default": 0, "min": 0, "max": 10000, "tooltip": "Limit to first N frames. 0 = load all."}),
+            }
+        }
+
+    RETURN_TYPES = ("PT_POSE_SEQUENCE",)
+    RETURN_NAMES = ("pose_sequence",)
+    FUNCTION = "load"
+    CATEGORY = "PoseTracks"
+
+    # ------------------------------------------------------------------ helpers
+
+    def _candidates_from_frame(self, frame_data):
+        """Extract list of (18,2) keypoint arrays (one per person) from one frame dict.
+
+        DWPose pkl files store the raw OpenPose-style output:
+          bodies.candidate  — (N_peaks, 2|3|4) all detected joint peaks across the image
+          bodies.subset     — (N_persons, 20)  maps person×joint → candidate index
+                              subset[p, j] = candidate row index, or -1 if not detected.
+                              Columns 18 and 19 are score/count bookkeeping, not joints.
+
+        Without subset, the candidate array cannot be reliably split into persons because
+        peaks for different joint types and persons are interleaved.
+        """
+        if isinstance(frame_data, np.ndarray):
+            arr = frame_data
+            if arr.ndim == 2 and arr.shape[1] in (2, 3):
+                return [arr[:18, :2]]
+            if arr.ndim == 3:
+                return [arr[i, :18, :2] for i in range(arr.shape[0])]
+            return []
+
+        if isinstance(frame_data, dict):
+            # ── Full DWPose format: bodies.candidate + bodies.subset ──────────
+            if 'bodies' in frame_data and 'candidate' in frame_data['bodies']:
+                raw = np.array(frame_data['bodies']['candidate'], dtype=np.float32)
+
+                if 'subset' in frame_data['bodies']:
+                    subset = np.array(frame_data['bodies']['subset'])  # (N_persons, 20)
+                    persons = []
+                    for ps in subset:
+                        kps = np.zeros((18, 2), dtype=np.float32)
+                        for joint_idx in range(18):
+                            cand_idx = int(ps[joint_idx])
+                            if 0 <= cand_idx < len(raw):
+                                kps[joint_idx] = raw[cand_idx, :2]
+                            # else: leave (0,0) = not detected
+                        persons.append(kps)
+                    return persons
+
+                # No subset — fall back to sequential chunking (single person assumed)
+                if raw.ndim == 2:
+                    persons = []
+                    for start in range(0, len(raw) - 17, 18):
+                        persons.append(raw[start:start + 18, :2])
+                    return persons
+                if raw.ndim == 3:
+                    return [raw[i, :18, :2] for i in range(raw.shape[0])]
+
+            # ── OpenPose JSON people list ──────────────────────────────────────
+            if 'people' in frame_data:
+                persons = []
+                for person in frame_data['people']:
+                    kps = person.get('pose_keypoints_2d', [])
+                    if len(kps) >= 18 * 3:
+                        arr = np.array(kps[:18 * 3], dtype=np.float32).reshape(18, 3)
+                        persons.append(arr[:, :2])
+                return persons
+
+            # ── Raw candidate key at top level ────────────────────────────────
+            if 'candidate' in frame_data:
+                raw = np.array(frame_data['candidate'], dtype=np.float32)
+                if raw.ndim == 2:
+                    return [raw[:18, :2]]
+                if raw.ndim == 3:
+                    return [raw[i, :18, :2] for i in range(raw.shape[0])]
+
+        return []
+
+    def _canvas_from_frame(self, frame_data, fallback_w, fallback_h):
+        """Read embedded canvas size from frame dict, fall back to source dimensions."""
+        if isinstance(frame_data, dict):
+            w = frame_data.get('canvas_width',  frame_data.get('W', frame_data.get('width',  fallback_w)))
+            h = frame_data.get('canvas_height', frame_data.get('H', frame_data.get('height', fallback_h)))
+            return int(w), int(h)
+        return fallback_w, fallback_h
+
+    def _kps_to_joints3d(self, kps, cx, cy, focal, depth, x_scale=1.0):
+        """Convert one person's (18,2) pixel/normalized array to (18,3) camera-space.
+
+        RealisDance pkl files normalize x by W and y by H independently.
+        (0, 0) is the DWPose sentinel for "joint not detected".
+        """
+        kps = np.array(kps, dtype=np.float32)
+        joints = np.zeros((18, 3), dtype=np.float32)
+        w = cx * 2   # full pixel width
+        h = cy * 2   # full pixel height
+        for j in range(min(18, len(kps))):
+            x_raw, y_raw = float(kps[j, 0]), float(kps[j, 1])
+            # (0, 0) is the DWPose "not detected" sentinel — skip it
+            if x_raw == 0.0 and y_raw == 0.0:
+                continue
+            # Denormalize: x by W, y by H (independent axes)
+            x = x_raw * w if 0 < x_raw <= 1.5 else x_raw
+            y = y_raw * h if 0 < y_raw <= 1.5 else y_raw
+            cam_x = (x - cx) * depth / focal * x_scale
+            cam_y = (y - cy) * depth / focal
+            joints[j] = [cam_x, cam_y, depth]
+        # Fill missing joints by duplicating parent
+        for j in range(18):
+            if np.all(joints[j] == 0) and JOINT_PARENTS.get(j, -1) != -1:
+                joints[j] = joints[JOINT_PARENTS[j]] + [0, 10, 0]
+        return joints
+
+    # ------------------------------------------------------------------ main
+
+    def load(self, file_path, source_width, source_height, depth, fov, smooth_sigma, x_scale, max_frames):
+        import os, json
+
+        if not os.path.isfile(file_path):
+            raise FileNotFoundError(f"[PTLoadDWPoseSequence] File not found: {file_path}")
+
+        ext = os.path.splitext(file_path)[1].lower()
+
+        # ---- Load raw data ----
+        if ext == '.pkl':
+            import pickle
+            with open(file_path, 'rb') as f:
+                raw = pickle.load(f)
+        elif ext in ('.json', '.jsonl'):
+            with open(file_path, 'r', encoding='utf-8') as f:
+                raw = json.load(f)
+        else:
+            raise ValueError(f"[PTLoadDWPoseSequence] Unsupported extension '{ext}'. Use .pkl or .json")
+
+        # ---- Normalise to a list of frame objects ----
+        if isinstance(raw, dict):
+            if 'frames' in raw:
+                frames = raw['frames']
+            elif 'people' in raw:
+                frames = [raw]          # single-frame JSON
+            else:
+                frames = [raw]
+        elif isinstance(raw, list):
+            frames = raw
+        elif isinstance(raw, np.ndarray):
+            frames = [raw[i] for i in range(raw.shape[0])]
+        else:
+            raise ValueError(f"[PTLoadDWPoseSequence] Unexpected root type: {type(raw)}")
+
+        if max_frames > 0:
+            frames = frames[:max_frames]
+
+        print(f"[PTLoadDWPoseSequence] Loaded {len(frames)} frames from {os.path.basename(file_path)}")
+
+        # ---- Diagnostics ----
+        if frames:
+            f0 = frames[0]
+            fw, fh = self._canvas_from_frame(f0, source_width, source_height)
+            print(f"[PTLoadDWPoseSequence] Frame canvas: {fw}×{fh}")
+            first_kps_list = self._candidates_from_frame(f0)
+            if first_kps_list:
+                raw_kps = np.array(first_kps_list[0], dtype=np.float32)
+                valid = raw_kps[(raw_kps[:, 0] != 0) | (raw_kps[:, 1] != 0)]
+                if len(valid):
+                    print(f"[PTLoadDWPoseSequence] Frame-0 coord ranges: "
+                          f"x=[{valid[:,0].min():.3f}, {valid[:,0].max():.3f}]  "
+                          f"y=[{valid[:,1].min():.3f}, {valid[:,1].max():.3f}]  "
+                          f"(>1.5 = pixel, <=1.5 = normalized)")
+
+        # ---- Per-frame conversion (first pass — variable char counts) ----
+        raw_frames = []   # list of (chars*18, 3) arrays, possibly different char counts
+
+        for frame_data in frames:
+            w, h = self._canvas_from_frame(frame_data, source_width, source_height)
+            focal = max(w, h) / (np.tan(np.radians(fov) / 2) * 2)
+            cx, cy = w / 2.0, h / 2.0
+
+            person_kps_list = self._candidates_from_frame(frame_data)
+            if not person_kps_list:
+                raw_frames.append(None)
+                continue
+
+            char_joints = [self._kps_to_joints3d(kps, cx, cy, focal, depth, x_scale)
+                           for kps in person_kps_list]
+            raw_frames.append(np.concatenate(char_joints, axis=0))  # (n*18, 3)
+
+        if not any(f is not None for f in raw_frames):
+            raise RuntimeError("[PTLoadDWPoseSequence] No valid frames parsed.")
+
+        # ---- Normalise to a single character count (use first valid frame's count) ----
+        # DWPose detectors can miss or double-detect on some frames.  We lock to the
+        # character count of the first valid frame, then pad (repeat last char) or
+        # trim subsequent frames so every frame has the same shape.
+        first_valid = next(f for f in raw_frames if f is not None)
+        target_chars = first_valid.shape[0] // 18
+
+        pose_sequence = []
+        for f in raw_frames:
+            if f is None:
+                # Missing frame — repeat previous or use first
+                pose_sequence.append(pose_sequence[-1].copy() if pose_sequence else first_valid.copy())
+                continue
+            cur_chars = f.shape[0] // 18
+            if cur_chars == target_chars:
+                pose_sequence.append(f)
+            elif cur_chars < target_chars:
+                # Pad: repeat the last detected character's joints for missing slots
+                pad = np.tile(f[-18:], (target_chars - cur_chars, 1))
+                pose_sequence.append(np.concatenate([f, pad], axis=0))
+            else:
+                # Trim: keep only the first target_chars characters
+                pose_sequence.append(f[:target_chars * 18])
+
+        # Build limb_seq / bone_colors once for target_chars
+        limb_seq = []
+        bone_colors = []
+        for c in range(target_chars):
+            off = c * 18
+            for (s, e) in LIMB_SEQ:
+                limb_seq.append((s + off, e + off))
+            bone_colors.extend(BONE_COLORS)
+
+        if not pose_sequence:
+            raise RuntimeError("[PTLoadDWPoseSequence] No valid frames parsed.")
+
+        # ---- Temporal smoothing to remove DWPose jitter ----
+        if smooth_sigma > 0.0 and len(pose_sequence) > 2:
+            # Stack to (F, J, 3), smooth along frame axis, unstack
+            arr = np.stack(pose_sequence, axis=0).astype(np.float32)  # (F, J*18, 3)
+            kernel_r = max(1, int(smooth_sigma * 3))
+            kernel_size = kernel_r * 2 + 1
+            # Simple Gaussian kernel — no scipy dependency
+            x = np.arange(-kernel_r, kernel_r + 1, dtype=np.float32)
+            kernel = np.exp(-0.5 * (x / smooth_sigma) ** 2)
+            kernel /= kernel.sum()
+            # Convolve each joint coordinate independently along frame axis
+            from numpy.lib.stride_tricks import as_strided
+            F, J, C = arr.shape
+            padded = np.pad(arr, ((kernel_r, kernel_r), (0, 0), (0, 0)), mode='edge')
+            smoothed = np.zeros_like(arr)
+            for k, w_k in enumerate(kernel):
+                smoothed += padded[k:k + F] * w_k
+            pose_sequence = [smoothed[i] for i in range(F)]
+
+        print(f"[PTLoadDWPoseSequence] Built sequence: {len(pose_sequence)} frames, "
+              f"{pose_sequence[0].shape[0]//18} character(s), smooth={smooth_sigma}, x_scale={x_scale}")
+
+        return ({"poses": pose_sequence, "limb_seq": limb_seq, "bone_colors": bone_colors},)
+
+
+class PTChainPoseSequences:
+    """
+    Concatenate up to 4 PT_POSE_SEQUENCE clips end-to-end.
+    An optional crossfade blends the tail of each clip into the head of the next
+    so joints don't snap at the seam.  sequence_1 is required; 2-4 are optional.
+    """
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "sequence_1": ("PT_POSE_SEQUENCE", {}),
+            },
+            "optional": {
+                "sequence_2": ("PT_POSE_SEQUENCE", {}),
+                "sequence_3": ("PT_POSE_SEQUENCE", {}),
+                "sequence_4": ("PT_POSE_SEQUENCE", {}),
+                "crossfade_frames": ("INT", {
+                    "default": 0, "min": 0, "max": 60,
+                    "tooltip": (
+                        "Frames over which the end of each clip blends into the "
+                        "start of the next.  0 = hard cut.  Crossfade frames are "
+                        "consumed from the tail of the earlier clip and the head "
+                        "of the later clip — total length is reduced by "
+                        "crossfade_frames for each join."
+                    ),
+                }),
+            },
+        }
+
+    RETURN_TYPES = ("PT_POSE_SEQUENCE",)
+    RETURN_NAMES = ("chained_sequence",)
+    FUNCTION = "chain"
+    CATEGORY = "PoseTracks"
+
+    def chain(self, sequence_1, sequence_2=None, sequence_3=None, sequence_4=None, crossfade_frames=0):
+        clips = [s for s in [sequence_1, sequence_2, sequence_3, sequence_4] if s is not None]
+
+        # Use limb_seq / bone_colors from the first non-None clip
+        limb_seq    = clips[0]["limb_seq"]
+        bone_colors = clips[0]["bone_colors"]
+
+        if len(clips) == 1:
+            return (clips[0],)
+
+        def poses_of(seq):
+            return [p.copy() for p in seq["poses"]]
+
+        cf = max(0, crossfade_frames)
+        result = poses_of(clips[0])
+
+        for nxt in clips[1:]:
+            nxt_poses = poses_of(nxt)
+
+            if cf == 0 or cf >= len(result) or cf >= len(nxt_poses):
+                # Hard cut
+                result = result + nxt_poses
+                continue
+
+            # Crossfade: blend tail of result with head of nxt_poses
+            # The blended frames replace the tail of result and the head of nxt;
+            # total clip length decreases by cf frames per join.
+            pre    = result[:-cf]          # frames before the crossfade window
+            tail   = result[-cf:]          # last cf frames of current result
+            head   = nxt_poses[:cf]        # first cf frames of next clip
+            post   = nxt_poses[cf:]        # frames after the crossfade window
+
+            blended = []
+            for k in range(cf):
+                t = (k + 1) / (cf + 1)    # t goes 1/(cf+1) → cf/(cf+1)  (never 0 or 1)
+                blended.append((1.0 - t) * tail[k] + t * head[k])
+
+            result = pre + blended + post
+
+        print(f"[PTChainPoseSequences] Chained {len(clips)} clips → {len(result)} frames "
+              f"(crossfade={cf}, joins={len(clips)-1})")
+
+        return ({"poses": result, "limb_seq": limb_seq, "bone_colors": bone_colors},)
+
+
 NODE_CLASS_MAPPINGS = {
     "PTAudioFeatureExtractor": PTAudioFeatureExtractor,
     "PTBasePoseGenerator": PTBasePoseGenerator,
@@ -2684,6 +3138,8 @@ NODE_CLASS_MAPPINGS = {
     "PTAISTFullSequence": PTAISTFullSequence,
     "PTPoseSequenceToDWPose": PTPoseSequenceToDWPose,
     "PTPoseRenderer2D": PTPoseRenderer2D,
+    "PTLoadDWPoseSequence": PTLoadDWPoseSequence,
+    "PTChainPoseSequences": PTChainPoseSequences,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -2701,4 +3157,6 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "PTAISTFullSequence": "PT AIST Full Sequence",
     "PTPoseSequenceToDWPose": "PT Pose Sequence to DWPose",
     "PTPoseRenderer2D": "PT Pose Render 2D",
+    "PTLoadDWPoseSequence": "PT Load DWPose Sequence",
+    "PTChainPoseSequences": "PT Chain Pose Sequences",
 }

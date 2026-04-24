@@ -527,13 +527,10 @@ class PTCMUMotion:
                 t = t * t * (3 - 2 * t)
                 output_poses[i] = (1 - t) * ref_joints_np + t * output_poses[i]
         
-        # OpenPose 18 limb sequence (matching PoseTracks nodes.py exactly)
         limb_seq = [
             (1, 2), (1, 5), (2, 3), (3, 4), (5, 6), (6, 7), (1, 8), (8, 9), (9, 10),
             (1, 11), (11, 12), (12, 13), (1, 0), (0, 14), (14, 16), (0, 15), (15, 17),
         ]
-        
-        # RGBA colors matching PoseTracks nodes.py BONE_COLORS exactly
         colors = [
             [1.0, 0.15, 0.15, 0.8], [0.15, 1.0, 1.0, 0.8], [1.0, 0.43, 0.15, 0.8],
             [1.0, 0.72, 0.15, 0.8], [0.15, 0.72, 1.0, 0.8], [0.15, 0.43, 1.0, 0.8],
@@ -542,79 +539,7 @@ class PTCMUMotion:
             [0.65, 0.65, 0.65, 0.8], [1.0, 0.15, 0.72, 0.8], [0.32, 0.15, 1.0, 0.8],
             [1.0, 0.15, 0.72, 0.8], [0.32, 0.15, 1.0, 0.8],
         ]
-        # RGBA colors matching PoseTracks nodes.py BONE_COLORS exactly
-        colors = [
-            [1.0, 0.15, 0.15, 0.8], [0.15, 1.0, 1.0, 0.8], [1.0, 0.43, 0.15, 0.8],
-            [1.0, 0.72, 0.15, 0.8], [0.15, 0.72, 1.0, 0.8], [0.15, 0.43, 1.0, 0.8],
-            [0.75, 1.0, 0.15, 0.8], [0.15, 1.0, 0.15, 0.8], [0.15, 1.0, 0.43, 0.8],
-            [0.15, 0.15, 1.0, 0.8], [0.43, 0.15, 1.0, 0.8], [0.72, 0.15, 1.0, 0.8],
-            [0.65, 0.65, 0.65, 0.8], [1.0, 0.15, 0.72, 0.8], [0.32, 0.15, 1.0, 0.8],
-            [1.0, 0.15, 0.72, 0.8], [0.32, 0.15, 1.0, 0.8],
-        ]
-        # RGBA colors matching PoseTracks nodes.py BONE_COLORS exactly
-        colors = [
-            [1.0, 0.15, 0.15, 0.8], [0.15, 1.0, 1.0, 0.8], [1.0, 0.43, 0.15, 0.8],
-            [1.0, 0.72, 0.15, 0.8], [0.15, 0.72, 1.0, 0.8], [0.15, 0.43, 1.0, 0.8],
-            [0.75, 1.0, 0.15, 0.8], [0.15, 1.0, 0.15, 0.8], [0.15, 1.0, 0.43, 0.8],
-            [0.15, 0.15, 1.0, 0.8], [0.43, 0.15, 1.0, 0.8], [0.72, 0.15, 1.0, 0.8],
-            [0.65, 0.65, 0.65, 0.8], [1.0, 0.15, 0.72, 0.8], [0.32, 0.15, 1.0, 0.8],
-            [1.0, 0.15, 0.72, 0.8], [0.32, 0.15, 1.0, 0.8],
-        ]
-        # RGBA colors matching PoseTracks nodes.py BONE_COLORS exactly
-        colors = [
-            [1.0, 0.15, 0.15, 0.8], [0.15, 1.0, 1.0, 0.8], [1.0, 0.43, 0.15, 0.8],
-            [1.0, 0.72, 0.15, 0.8], [0.15, 0.72, 1.0, 0.8], [0.15, 0.43, 1.0, 0.8],
-            [0.75, 1.0, 0.15, 0.8], [0.15, 1.0, 0.15, 0.8], [0.15, 1.0, 0.43, 0.8],
-            [0.15, 0.15, 1.0, 0.8], [0.43, 0.15, 1.0, 0.8], [0.72, 0.15, 1.0, 0.8],
-            [0.65, 0.65, 0.65, 0.8], [1.0, 0.15, 0.72, 0.8], [0.32, 0.15, 1.0, 0.8],
-            [1.0, 0.15, 0.72, 0.8], [0.32, 0.15, 1.0, 0.8],
-        ]
-        # RGBA colors matching PoseTracks nodes.py BONE_COLORS exactly
-        colors = [
-            [1.0, 0.15, 0.15, 0.8], [0.15, 1.0, 1.0, 0.8], [1.0, 0.43, 0.15, 0.8],
-            [1.0, 0.72, 0.15, 0.8], [0.15, 0.72, 1.0, 0.8], [0.15, 0.43, 1.0, 0.8],
-            [0.75, 1.0, 0.15, 0.8], [0.15, 1.0, 0.15, 0.8], [0.15, 1.0, 0.43, 0.8],
-            [0.15, 0.15, 1.0, 0.8], [0.43, 0.15, 1.0, 0.8], [0.72, 0.15, 1.0, 0.8],
-            [0.65, 0.65, 0.65, 0.8], [1.0, 0.15, 0.72, 0.8], [0.32, 0.15, 1.0, 0.8],
-            [1.0, 0.15, 0.72, 0.8], [0.32, 0.15, 1.0, 0.8],
-        ]
-        # RGBA colors matching PoseTracks nodes.py BONE_COLORS exactly
-        colors = [
-            [1.0, 0.15, 0.15, 0.8], [0.15, 1.0, 1.0, 0.8], [1.0, 0.43, 0.15, 0.8],
-            [1.0, 0.72, 0.15, 0.8], [0.15, 0.72, 1.0, 0.8], [0.15, 0.43, 1.0, 0.8],
-            [0.75, 1.0, 0.15, 0.8], [0.15, 1.0, 0.15, 0.8], [0.15, 1.0, 0.43, 0.8],
-            [0.15, 0.15, 1.0, 0.8], [0.43, 0.15, 1.0, 0.8], [0.72, 0.15, 1.0, 0.8],
-            [0.65, 0.65, 0.65, 0.8], [1.0, 0.15, 0.72, 0.8], [0.32, 0.15, 1.0, 0.8],
-            [1.0, 0.15, 0.72, 0.8], [0.32, 0.15, 1.0, 0.8],
-        ]
-        # RGBA colors matching PoseTracks nodes.py BONE_COLORS exactly
-        colors = [
-            [1.0, 0.15, 0.15, 0.8], [0.15, 1.0, 1.0, 0.8], [1.0, 0.43, 0.15, 0.8],
-            [1.0, 0.72, 0.15, 0.8], [0.15, 0.72, 1.0, 0.8], [0.15, 0.43, 1.0, 0.8],
-            [0.75, 1.0, 0.15, 0.8], [0.15, 1.0, 0.15, 0.8], [0.15, 1.0, 0.43, 0.8],
-            [0.15, 0.15, 1.0, 0.8], [0.43, 0.15, 1.0, 0.8], [0.72, 0.15, 1.0, 0.8],
-            [0.65, 0.65, 0.65, 0.8], [1.0, 0.15, 0.72, 0.8], [0.32, 0.15, 1.0, 0.8],
-            [1.0, 0.15, 0.72, 0.8], [0.32, 0.15, 1.0, 0.8],
-        ]
-        # RGBA colors matching PoseTracks nodes.py BONE_COLORS exactly
-        colors = [
-            [1.0, 0.15, 0.15, 0.8], [0.15, 1.0, 1.0, 0.8], [1.0, 0.43, 0.15, 0.8],
-            [1.0, 0.72, 0.15, 0.8], [0.15, 0.72, 1.0, 0.8], [0.15, 0.43, 1.0, 0.8],
-            [0.75, 1.0, 0.15, 0.8], [0.15, 1.0, 0.15, 0.8], [0.15, 1.0, 0.43, 0.8],
-            [0.15, 0.15, 1.0, 0.8], [0.43, 0.15, 1.0, 0.8], [0.72, 0.15, 1.0, 0.8],
-            [0.65, 0.65, 0.65, 0.8], [1.0, 0.15, 0.72, 0.8], [0.32, 0.15, 1.0, 0.8],
-            [1.0, 0.15, 0.72, 0.8], [0.32, 0.15, 1.0, 0.8],
-        ]
-        # RGBA colors matching PoseTracks nodes.py BONE_COLORS exactly
-        colors = [
-            [1.0, 0.15, 0.15, 0.8], [0.15, 1.0, 1.0, 0.8], [1.0, 0.43, 0.15, 0.8],
-            [1.0, 0.72, 0.15, 0.8], [0.15, 0.72, 1.0, 0.8], [0.15, 0.43, 1.0, 0.8],
-            [0.75, 1.0, 0.15, 0.8], [0.15, 1.0, 0.15, 0.8], [0.15, 1.0, 0.43, 0.8],
-            [0.15, 0.15, 1.0, 0.8], [0.43, 0.15, 1.0, 0.8], [0.72, 0.15, 1.0, 0.8],
-            [0.65, 0.65, 0.65, 0.8], [1.0, 0.15, 0.72, 0.8], [0.32, 0.15, 1.0, 0.8],
-            [1.0, 0.15, 0.72, 0.8], [0.32, 0.15, 1.0, 0.8],
-        ]
-        
+
         # Build full limb_seq and colors for all characters
         full_limb_seq = []
         full_colors = []
@@ -642,65 +567,29 @@ class PTCMUMotion:
 
 
 class PTCMUSequenceToPTPose:
-    """Convert CMU pose sequence to frame-by-frame PT_POSE for rendering."""
-    
+    """
+    Legacy passthrough — PTCMUMotion already outputs a valid PT_POSE_SEQUENCE.
+    This node is kept so existing workflows don't break; it simply passes the
+    sequence through unchanged.  image_width/image_height are ignored.
+    """
+
     @classmethod
     def INPUT_TYPES(cls):
         return {
             "required": {
                 "pose_sequence": ("PT_POSE_SEQUENCE",),
-                "image_width": ("INT", {"default": 512, "min": 64, "max": 4096}),
+                "image_width":  ("INT", {"default": 512, "min": 64, "max": 4096}),
                 "image_height": ("INT", {"default": 768, "min": 64, "max": 4096}),
             }
         }
-    
+
     RETURN_TYPES = ("PT_POSE_SEQUENCE",)
     RETURN_NAMES = ("pose_sequence",)
     FUNCTION = "convert"
     CATEGORY = "PoseTracks/Motion"
-    
+
     def convert(self, pose_sequence, image_width, image_height):
-        poses = pose_sequence['poses']
-        char_count = pose_sequence.get('char_count', 1)
-        
-        # Stack all poses into tensor
-        pose_array = np.stack(poses, axis=0)
-        joints_tensor = torch.from_numpy(pose_array).float()
-        
-        # OpenPose 18 limb sequence (matching PoseTracks nodes.py exactly)
-        limb_seq = [
-            (1, 2), (1, 5), (2, 3), (3, 4), (5, 6), (6, 7), (1, 8), (8, 9), (9, 10),
-            (1, 11), (11, 12), (12, 13), (1, 0), (0, 14), (14, 16), (0, 15), (15, 17),
-        ]
-        
-        # RGBA colors matching PoseTracks nodes.py (converted to RGB tuples 0-255)
-        colors = [
-            [1.0, 0.15, 0.15, 0.8], [0.15, 1.0, 1.0, 0.8], [1.0, 0.43, 0.15, 0.8],
-            [1.0, 0.72, 0.15, 0.8], [0.15, 0.72, 1.0, 0.8], [0.15, 0.43, 1.0, 0.8],
-            [0.75, 1.0, 0.15, 0.8], [0.15, 1.0, 0.15, 0.8], [0.15, 1.0, 0.43, 0.8],
-            [0.15, 0.15, 1.0, 0.8], [0.43, 0.15, 1.0, 0.8], [0.72, 0.15, 1.0, 0.8],
-            [0.65, 0.65, 0.65, 0.8], [1.0, 0.15, 0.72, 0.8], [0.32, 0.15, 1.0, 0.8],
-            [1.0, 0.15, 0.72, 0.8], [0.32, 0.15, 1.0, 0.8],
-        ]
-        
-        # Build full limb_seq and colors for all characters
-        full_limb_seq = []
-        full_colors = []
-        for i in range(char_count):
-            offset = i * 18
-            for limb in limb_seq:
-                full_limb_seq.append((limb[0] + offset, limb[1] + offset))
-            full_colors.extend(colors)
-        
-        return ({
-            'joints': joints_tensor,
-            'limb_seq': full_limb_seq,
-            'colors': full_colors,
-            'char_count': char_count,
-            'frame_count': len(poses),
-            'image_width': image_width,
-            'image_height': image_height,
-        },)
+        return (pose_sequence,)
 
 
 # Node mappings
